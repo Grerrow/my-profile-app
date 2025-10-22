@@ -1,4 +1,4 @@
-const proxyurl = 'https://my-profile-8ycy23aer-grerrow-7699s-projects.vercel.app/api/proxy?url=';
+const proxyurl = 'https://feuilletonistic-treva-unevilly.ngrok-free.dev/proxy?url=';
 
 
 async function loginUser(event) {

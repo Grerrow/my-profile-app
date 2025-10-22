@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Profile</title>
+
+    
+</head>
+<body>
+    <header>
+        <h1 id="user-name">Loading...</h1>
+        <button id="logout">Logout</button>
+    </header>
+
+    <main>
+        <section id="user-info">
+            <p><strong>Login:</strong> <span id="user-login"></span></p>
+            <p><strong>Email:</strong> <span id="user-email"></span></p>
+            <p><strong>Total XP:</strong> <span id="total-xp"></span> XP</p>
+        </section>
+
+        <section id="stats">
+            <div class="xp-box">
+                <h3>Projects XP</h3>
+                <p id="projects-xp">0 XP</p>
+            </div>
+            <div class="xp-box">
+                <h3>Checkpoints XP</h3>
+                <p id="checkpoints-xp">0 XP</p>
+            </div>
+            <div class="xp-box">
+                <h3>JS Piscine XP</h3>
+                <p id="piscine-xp">0 XP</p>
+            </div>
+        </section>
+
+        <section id="graphs">
+            <h2>My Statistics</h2>
+            <svg id="xp-graph"></svg>
+        </section>
+    </main>
+
+    <script src="main.js"></script>
+    <script>
+        // --- Token validation ---
+        const token = localStorage.getItem('token');
+        if (!isTokenValid(token)) {
+            window.location.href = 'index.html';
+        }
+
+        // --- Load user info ---
+        const userData = JSON.parse(localStorage.getItem('userData'));
+        if (userData && userData.length > 0) {
+            const user = userData[0];
+            document.title = `Profile - ${user.login}`;
+            document.getElementById('user-name').textContent = `${user.firstName} ${user.lastName}`;
+            document.getElementById('user-login').textContent = user.login;
+            document.getElementById('user-email').textContent = user.email || 'N/A';
+        } else {
+            console.warn('No user data found.');
+        }
+
+        // --- Get and display XP totals ---
+        const totals = JSON.parse(localStorage.getItem('totalXPStats')) || calculateTotalXP();
+
+        document.getElementById('projects-xp').textContent = `${totals.projects.toLocaleString()} XP`;
+        document.getElementById('checkpoints-xp').textContent = `${totals.checkpoints.toLocaleString()} XP`;
+        document.getElementById('piscine-xp').textContent = `${totals.piscineJs.toLocaleString()} XP`;
+        document.getElementById('total-xp').textContent = totals.total.toLocaleString();
+
+        // --- Logout ---
+        document.getElementById('logout').addEventListener('click', () => {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        });
+
+        // --- Simple example graph ---
+        const svg = document.getElementById('xp-graph');
+        const barData = [
+            { label: 'Projects', value: totals.projects, color: '#4caf50' },
+            { label: 'Checkpoints', value: totals.checkpoints, color: '#81c784' },
+            { label: 'Piscine JS', value: totals.piscineJs, color: '#a5d6a7' },
+        ];
+
+        const maxValue = Math.max(...barData.map(b => b.value)) || 1;
+        const svgHeight = 200;
+        const barWidth = 80;
+        const gap = 60;
+
+        barData.forEach((bar, i) => {
+            const barHeight = (bar.value / maxValue) * (svgHeight - 30);
+            const x = 70 + i * (barWidth + gap);
+            const y = svgHeight - barHeight - 20;
+
+            const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            rect.setAttribute("x", x);
+            rect.setAttribute("y", y);
+            rect.setAttribute("width", barWidth);
+            rect.setAttribute("height", barHeight);
+            rect.setAttribute("fill", bar.color);
+            svg.appendChild(rect);
+
+            const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            label.setAttribute("x", x + barWidth / 2);
+            label.setAttribute("y", svgHeight - 5);
+            label.setAttribute("text-anchor", "middle");
+            label.setAttribute("font-size", "12");
+            label.textContent = bar.label;
+            svg.appendChild(label);
+        });
+    </script>
+</body>
+</html>

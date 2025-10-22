@@ -1,4 +1,4 @@
-const proxyurl = 'https://my-profile-bmp1r46pl-grerrow-7699s-projects.vercel.app/api/proxy?url=';
+const proxyurl = 'https://my-profile-8ycy23aer-grerrow-7699s-projects.vercel.app/api/proxy?url=';
 
 
 async function loginUser(event) {

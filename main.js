@@ -1,10 +1,13 @@
+const proxyurl = 'https://my-profile-bmp1r46pl-grerrow-7699s-projects.vercel.app/api/proxy?url=';
+
+
 async function loginUser(event) {
     event.preventDefault();
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
 
     try {
-        const response = await fetch('https://platform.zone01.gr/api/auth/signin', {
+        const response = await fetch(`${proxyurl}${encodeURIComponent('https://platform.zone01.gr/api/auth/signin')}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
@@ -18,7 +21,7 @@ async function loginUser(event) {
         if (response.ok && data.token) {
             localStorage.setItem('token', data.token);
             alert('Login successful!');
-            // window.location.href = 'profile.html';
+            window.location.href = 'profile.html';
         } else {
             alert('Login failed: ' + (data.message || response.statusText));
         }
@@ -28,6 +31,7 @@ async function loginUser(event) {
     }
 }
 
+///jwt
 function decodeJWT(token) {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -45,46 +49,30 @@ function isTokenValid(token) {
     }
 }
 
+
 const form = document.getElementById("login-form");
-if (form) {
-    form.addEventListener("submit", loginUser);
-} else {
-    console.warn('Login form not found (#login-form).');
-}
+if (form) form.addEventListener("submit", loginUser);
 
 const token = localStorage.getItem('token');
-if (isTokenValid(token)) {
-    console.log('Token is valid');
-} else {
-    console.log('Token is invalid or expired');
-    localStorage.removeItem('token');
-}
+if (!isTokenValid(token)) localStorage.removeItem('token');
 
-//fetch user data using the graphql api https://platform.zone01.gr/api/graphql-engine/v1/graphql
-
+// ---------------------------
 async function fetchUserData() {
     const token = localStorage.getItem('token');
-    if (!isTokenValid(token)) {
-        console.warn('Cannot fetch user data: invalid or missing token.');
-        return;
-    }
+    if (!isTokenValid(token)) return;
 
     const query = `
-        {
-  user (where: {id:{_eq: 672}}){
-    login
-    firstName
-    lastName
-    email
-  	
-      
-    }
-    
-  }
-    `;
+    {
+      user (where: {id:{_eq: 672}}){
+        login
+        firstName
+        lastName
+        email
+      }
+    }`;
 
     try {
-        const response = await fetch('https://platform.zone01.gr/api/graphql-engine/v1/graphql', {
+        const response = await fetch(`${proxyurl}${encodeURIComponent('https://platform.zone01.gr/api/graphql-engine/v1/graphql')}`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
@@ -95,16 +83,12 @@ async function fetchUserData() {
 
         const result = await response.json();
         if (response.ok && result.data) {
-            console.log('User data:', result.data.user);
-
-            // ✅ Save data temporarily for profile.html
             localStorage.setItem('userData', JSON.stringify(result.data.user));
-
-            // ✅ Redirect to profile page
-            window.location.href = 'profile.html';
+            console.log('User data fetched:', result.data.user);
+            // window.location.href = 'profile.html';
         } else {
             console.error('GraphQL error:', result.errors);
-            alert('Error fetching user data. Please try again.');
+            alert('Error fetching user data.');
         }
     } catch (err) {
         console.error('Fetch user data error:', err);
@@ -112,31 +96,51 @@ async function fetchUserData() {
     }
 }
 
-//fetch user xp data using the graphql api https://platform.zone01.gr/api/graphql-engine/v1/graphql
-
+// ---------------------------
+// 📝 FETCH XP DATA
+// ---------------------------
 async function fetchXpData(whereClause, storageKey) {
+    const token = localStorage.getItem('token');
+    if (!isTokenValid(token)) return;
+
     const query = `
-        query {
-            transaction(where: ${whereClause}, order_by: { createdAt: desc }) {
-                path
-                amount
-                createdAt
-                object {
-                    name
-                    type
-                }
+    query {
+        transaction(where: ${whereClause}, order_by: { createdAt: desc }) {
+            path
+            amount
+            createdAt
+            object {
+                name
+                type
             }
         }
-    `;
+    }`;
 
-    const data = await fetchGraphQL(query);
-    if (data && data.transaction) {
-        localStorage.setItem(storageKey, JSON.stringify(data.transaction));
-        console.log(`${storageKey} saved:`, data.transaction);
+    try {
+        const response = await fetch(`${proxyurl}${encodeURIComponent('https://platform.zone01.gr/api/graphql-engine/v1/graphql')}`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ query })
+        });
+
+        const result = await response.json();
+        if (response.ok && result.data) {
+            localStorage.setItem(storageKey, JSON.stringify(result.data.transaction));
+            console.log(`${storageKey} saved:`, result.data.transaction);
+        } else {
+            console.error('GraphQL error:', result.errors);
+            alert(`Error fetching ${storageKey}.`);
+        }
+    } catch (err) {
+        console.error(`Fetch ${storageKey} error:`, err);
+        alert(`Network or server error while fetching ${storageKey}.`);
     }
 }
 
-// 🎯 XP by project (excluding checkpoints & piscine-js)
+// 🎯 XP BY CATEGORY
 async function fetchUserProjectsXPData() {
     const where = `{
         _and: [
@@ -149,7 +153,6 @@ async function fetchUserProjectsXPData() {
     await fetchXpData(where, 'userXPData');
 }
 
-// 🎯 XP for checkpoints
 async function fetchUserCheckpointsXPData() {
     const where = `{
         _and: [
@@ -160,7 +163,6 @@ async function fetchUserCheckpointsXPData() {
     await fetchXpData(where, 'userCheckpointsXPData');
 }
 
-// 🎯 XP for Piscine JS
 async function fetchJSPiscineXPData() {
     const where = `{
         _and: [
@@ -174,7 +176,6 @@ async function fetchJSPiscineXPData() {
 // ---------------------------
 // 📊 CALCULATE TOTAL XP
 // ---------------------------
-
 function calculateTotalXP() {
     const projectsXp = JSON.parse(localStorage.getItem('userXPData') || '[]');
     const checkpointsXp = JSON.parse(localStorage.getItem('userCheckpointsXPData') || '[]');
@@ -196,15 +197,12 @@ function calculateTotalXP() {
     return totals;
 }
 
-// ---------------------------
-// 🧭 EXAMPLE WORKFLOW
-// ---------------------------
 
-// After successful login, you can call these in sequence:
 async function initDashboard() {
     await fetchUserData();
     await fetchUserProjectsXPData();
     await fetchUserCheckpointsXPData();
     await fetchJSPiscineXPData();
     calculateTotalXP();
+    window.location.href = 'profile.html';
 }

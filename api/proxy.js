@@ -2,30 +2,44 @@
 import fetch from 'node-fetch';
 
 export default async function handler(req, res) {
-  const target = req.query.url;
-  if (!target) return res.status(400).json({ error: 'Missing url query' });
+  // ✅ Always set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*'); // allow all origins
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  // Handle preflight OPTIONS request
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  const targetUrl = req.query.url;
+  if (!targetUrl) {
+    return res.status(400).json({ error: 'Missing target URL' });
+  }
 
   try {
-    // Forward headers but remove host-related headers that might break things:
-    const headers = { ...req.headers };
-    delete headers.host;
-    delete headers['content-length'];
-
-    const response = await fetch(target, {
+    // Build fetch options
+    const fetchOptions = {
       method: req.method,
-      headers,
-      body: ['GET','HEAD'].includes(req.method) ? undefined : req.body && Object.keys(req.body).length ? JSON.stringify(req.body) : await req.text()
-    });
+      headers: { ...req.headers },
+      body: req.method !== 'GET' ? JSON.stringify(req.body) : undefined,
+    };
 
-    const text = await response.text();
-    // Allow CORS for your front-end
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    delete fetchOptions.headers.host; // remove host header, otherwise target may reject
 
-    res.status(response.status).send(text);
+    const response = await fetch(targetUrl, fetchOptions);
+    const contentType = response.headers.get('content-type');
+
+    // Forward response headers, status, and body
+    res.status(response.status);
+    if (contentType && contentType.includes('application/json')) {
+      const data = await response.json();
+      return res.json(data);
+    } else {
+      const data = await response.text();
+      return res.send(data);
+    }
   } catch (err) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
     res.status(500).json({ error: err.message });
   }
 }

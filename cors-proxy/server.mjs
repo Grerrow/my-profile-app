@@ -1,52 +1,49 @@
 import express from "express";
-import cors from "cors";
 import fetch from "node-fetch";
+import cors from "cors";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json()); // ✅ Parse JSON request bodies
+app.use(express.urlencoded({ extended: true }));
 
-// Log requests to help debug
-app.use((req, res, next) => {
-  console.log(`[${req.method}] ${req.url}`);
-  next();
-});
-
-// Proxy route
-app.all("/proxy", async (req, res) => {
-  const target = req.query.url;
-  if (!target) return res.status(400).json({ error: "Missing 'url' parameter" });
+app.use("/proxy", async (req, res) => {
+  const targetUrl = req.query.url;
+  if (!targetUrl) {
+    return res.status(400).json({ error: "Missing target URL" });
+  }
 
   try {
-    const fetchOptions = {
+    const response = await fetch(targetUrl, {
       method: req.method,
-      headers: { ...req.headers },
-      body: ["GET", "HEAD"].includes(req.method)
-        ? undefined
-        : JSON.stringify(req.body),
-    };
-    delete fetchOptions.headers.host;
-
-    const response = await fetch(target, fetchOptions);
-    const data = await response.text();
-
-    res.status(response.status).set({
-      "Access-Control-Allow-Origin": "*",
-      "Content-Type": response.headers.get("content-type") || "text/plain",
+      headers: {
+        "Content-Type": req.headers["content-type"] || "application/json",
+        "Authorization": req.headers["authorization"] || "",
+      },
+      body:
+        req.method !== "GET" && req.method !== "HEAD"
+          ? JSON.stringify(req.body)
+          : undefined,
     });
 
-    res.send(data);
-  } catch (error) {
-    console.error("❌ Proxy error:", error);
-    res.status(500).json({ error: error.message });
+    const text = await response.text();
+
+    // Try to forward as JSON if possible
+    res.set("Access-Control-Allow-Origin", "*");
+    res.set("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+    res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+    if (response.headers.get("content-type")?.includes("application/json")) {
+      res.status(response.status).json(JSON.parse(text));
+    } else {
+      res.status(response.status).send(text);
+    }
+  } catch (err) {
+    console.error("Proxy error:", err);
+    res.status(500).json({ error: "Proxy request failed", details: err.message });
   }
 });
 
 app.listen(PORT, () => console.log(`✅ Proxy running on port ${PORT}`));
-
-// Prevent crashes due to unhandled promises
-process.on("unhandledRejection", err => {
-  console.error("🚨 Unhandled Rejection:", err);
-});

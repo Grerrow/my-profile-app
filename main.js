@@ -6,12 +6,15 @@ async function loginUser(event) {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
 
-    try {
-        const response = await fetch(`${proxyurl}${encodeURIComponent('https://platform.zone01.gr/api/auth/signin')}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
+    const credentials = btoa(`${email}:${password}`);
+
+  try {
+    const response = await fetch(`${proxyurl}${encodeURIComponent('https://platform.zone01.gr/api/auth/signin')}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${credentials}`,
+      },
+    });
 
         const text = await response.text();
         let data;

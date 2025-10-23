@@ -8,20 +8,24 @@ async function loginUser(event) {
 
     const credentials = btoa(`${email}:${password}`);
 
-  try {
-    const response = await fetch(`${proxyurl}${encodeURIComponent('https://platform.zone01.gr/api/auth/signin')}`, {
-      method: 'POST',
-      headers: {
-    'Authorization': `Basic ${credentials}`,
-    'Content-Type': 'application/json'
-  },
-});
+    try {
+        const response = await fetch(`${proxyurl}${encodeURIComponent('https://platform.zone01.gr/api/auth/signin')}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Basic ${credentials}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        });
 
         const text = await response.text();
         let data;
         try { data = JSON.parse(text); } 
         catch { data = { message: text }; }
 
+        console.log('Login response:', data); // 🔍 See the exact token key
+
+        // ✅ Check multiple possible token keys
         const token = data.token || data.accessToken || data.jwt;
         if (response.ok && token) {
             localStorage.setItem('token', token);
@@ -35,6 +39,7 @@ async function loginUser(event) {
         alert('Network or server error');
     }
 }
+
 
 ///jwt
 function decodeJWT(token) {

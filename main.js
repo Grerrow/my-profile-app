@@ -1,4 +1,4 @@
-const proxyurl = 'https://feuilletonistic-treva-unevilly.ngrok-free.dev/proxy?url=';
+const proxyurl = 'https://my-profile-app-7zjs.onrender.com/proxy?url=';
 
 
 async function loginUser(event) {

@@ -12,17 +12,19 @@ async function loginUser(event) {
     const response = await fetch(`${proxyurl}${encodeURIComponent('https://platform.zone01.gr/api/auth/signin')}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${credentials}`,
-      },
-    });
+    'Authorization': `Basic ${credentials}`,
+    'Content-Type': 'application/json'
+  },
+});
 
         const text = await response.text();
         let data;
         try { data = JSON.parse(text); } 
         catch { data = { message: text }; }
 
-        if (response.ok && data.token) {
-            localStorage.setItem('token', data.token);
+        const token = data.token || data.accessToken || data.jwt;
+        if (response.ok && token) {
+            localStorage.setItem('token', token);
             alert('Login successful!');
             window.location.href = 'profile.html';
         } else {

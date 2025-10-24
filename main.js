@@ -16,22 +16,18 @@ async function loginUser(event) {
             },
         });
 
-        const text = await response.text();
-        let data;
-        try { data = JSON.parse(text); } 
-        catch { data = { message: text }; }
+    const text = await response.text();
+    const token = text.trim();
 
-        console.log('Login response:', data); // 🔍 See the exact token key
+    if (response.ok && token) {
+        localStorage.setItem('jwt_token', token);
+        alert('Login successful!');
+        window.location.href = 'profile.html';
+    } else {
+        alert('Login failed: ' + response.statusText);
+    }
 
-        // ✅ Check multiple possible token keys
-        const token = data.token || data.accessToken || data.jwt_token;
-        if (response.ok && token) {
-            localStorage.setItem('jwt_token', token);
-            alert('Login successful!');
-            window.location.href = 'profile.html';
-        } else {
-            alert('Login failed: ' + (data.message || response.statusText));
-        }
+
     } catch (err) {
         console.error('Login error:', err);
         alert('Network or server error');

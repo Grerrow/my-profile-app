@@ -26,9 +26,9 @@ async function loginUser(event) {
         console.log('Login response:', data); // 🔍 See the exact token key
 
         // ✅ Check multiple possible token keys
-        const token = data.token || data.accessToken || data.jwt;
+        const token = data.token || data.accessToken || data.jwt_token;
         if (response.ok && token) {
-            localStorage.setItem('token', token);
+            localStorage.setItem('jwt_token', token);
             alert('Login successful!');
             window.location.href = 'profile.html';
         } else {

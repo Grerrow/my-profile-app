@@ -6,43 +6,52 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json()); // ✅ Parse JSON request bodies
-app.use(express.urlencoded({ extended: true }));
+app.use(express.text({ type: "*/*" })); // ✅ Preserve raw body for GraphQL & auth requests
 
-app.use("/proxy", async (req, res) => {
+app.all("/proxy", async (req, res) => {
   const targetUrl = req.query.url;
   if (!targetUrl) {
     return res.status(400).json({ error: "Missing target URL" });
   }
 
   try {
+    // 🧹 Clean headers and strip quotes from Authorization
+    const headers = {};
+    for (const [key, value] of Object.entries(req.headers)) {
+      if (key.toLowerCase() === "host") continue;
+      headers[key] =
+        key.toLowerCase() === "authorization"
+          ? value.replace(/^"|"$/g, "")
+          : value;
+    }
+
     const response = await fetch(targetUrl, {
       method: req.method,
-      headers: {
-        "Content-Type": req.headers["content-type"] || "application/json",
-        "Authorization": req.headers["authorization"] || "",
-      },
-      body:
-        req.method !== "GET" && req.method !== "HEAD"
-          ? JSON.stringify(req.body)
-          : undefined,
+      headers,
+      body: req.method !== "GET" && req.method !== "HEAD" ? req.body : undefined,
     });
 
     const text = await response.text();
 
-    // Try to forward as JSON if possible
     res.set("Access-Control-Allow-Origin", "*");
     res.set("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
     res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
+    // Try to forward JSON if possible
     if (response.headers.get("content-type")?.includes("application/json")) {
-      res.status(response.status).json(JSON.parse(text));
+      try {
+        res.status(response.status).json(JSON.parse(text));
+      } catch {
+        res.status(response.status).send(text);
+      }
     } else {
       res.status(response.status).send(text);
     }
   } catch (err) {
     console.error("Proxy error:", err);
-    res.status(500).json({ error: "Proxy request failed", details: err.message });
+    res
+      .status(500)
+      .json({ error: "Proxy request failed", details: err.message });
   }
 });
 

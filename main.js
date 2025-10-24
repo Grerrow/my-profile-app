@@ -13,9 +13,7 @@ async function loginUser(event) {
             method: 'POST',
             headers: {
                 'Authorization': `Basic ${credentials}`,
-                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({})
         });
 
         const text = await response.text();

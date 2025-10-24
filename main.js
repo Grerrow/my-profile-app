@@ -21,7 +21,7 @@ async function loginUser(event) {
 
         // the token is returned as plain text, not JSON
         if (response.ok && text && text.length > 20) {
-            localStorage.setItem('jwt_token', text);
+            localStorage.setItem('token', text);
             alert('✅ Login successful!');
             await initDashboard();
              window.location.href = 'profile.html';

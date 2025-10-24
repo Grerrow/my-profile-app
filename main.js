@@ -23,7 +23,8 @@ async function loginUser(event) {
         if (response.ok && text && text.length > 20) {
             localStorage.setItem('jwt_token', text);
             alert('✅ Login successful!');
-            window.location.href = 'profile.html';
+            await initDashboard();
+             window.location.href = 'profile.html';
         } else {
             alert('❌ Login failed: ' + text || response.statusText);
         }
@@ -208,5 +209,5 @@ async function initDashboard() {
     await fetchUserCheckpointsXPData();
     await fetchJSPiscineXPData();
     calculateTotalXP();
-    window.location.href = 'profile.html';
+    // window.location.href = 'profile.html';
 }

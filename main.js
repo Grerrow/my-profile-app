@@ -65,10 +65,13 @@ if (!isTokenValid(token)) localStorage.removeItem('token');
 async function fetchUserData() {
     const token = localStorage.getItem('token');
     if (!isTokenValid(token)) return;
+    const payload = decodeJWT(token);
+    const userId = payload.sub; // the "sub" claim is usually the user id
+
 
     const query = `
     {
-      user (where: {id:{_eq: 672}}){
+      user (where: {id:{_eq: ${userId}}}){
         login
         firstName
         lastName

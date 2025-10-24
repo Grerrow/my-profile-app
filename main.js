@@ -3,8 +3,8 @@ const proxyurl = 'https://my-profile-app-7zjs.onrender.com/proxy?url=';
 
 async function loginUser(event) {
     event.preventDefault();
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
 
     const credentials = btoa(`${email}:${password}`);
 
@@ -16,23 +16,23 @@ async function loginUser(event) {
             },
         });
 
-    const text = await response.text();
-    const token = text.trim();
+        const text = (await response.text()).trim();
+        console.log('🔐 Raw login response:', text);
 
-    if (response.ok && token) {
-        localStorage.setItem('jwt_token', token);
-        alert('Login successful!');
-        window.location.href = 'profile.html';
-    } else {
-        alert('Login failed: ' + response.statusText);
-    }
-
-
+        // the token is returned as plain text, not JSON
+        if (response.ok && text && text.length > 20) {
+            localStorage.setItem('jwt_token', text);
+            alert('✅ Login successful!');
+            window.location.href = 'profile.html';
+        } else {
+            alert('❌ Login failed: ' + text || response.statusText);
+        }
     } catch (err) {
         console.error('Login error:', err);
         alert('Network or server error');
     }
 }
+
 
 
 ///jwt

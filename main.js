@@ -1,6 +1,5 @@
 const proxyurl = 'https://my-profile-app-7zjs.onrender.com/proxy?url=';
 
-
 async function loginUser(event) {
     event.preventDefault();
     const email = document.getElementById("email").value.trim();
@@ -19,22 +18,25 @@ async function loginUser(event) {
         const text = (await response.text()).trim();
         console.log('🔐 Raw login response:', text);
 
-        // the token is returned as plain text, not JSON
         if (response.ok && text && text.length > 20) {
-            localStorage.setItem('token', text);
+            // 🟢 FIX: Remove potential wrapping quotes from the token
+            const cleanToken = text.replace(/^"|"$/g, '');
+
+            // 🟢 FIX: Save cleaned token
+            localStorage.setItem('token', cleanToken);
+
+            console.log('✅ Stored clean token:', cleanToken);
             alert('✅ Login successful!');
             await initDashboard();
-             window.location.href = 'profile.html';
+            window.location.href = 'profile.html';
         } else {
-            alert('❌ Login failed: ' + text || response.statusText);
+            alert('❌ Login failed: ' + (text || response.statusText));
         }
     } catch (err) {
         console.error('Login error:', err);
         alert('Network or server error');
     }
 }
-
-
 
 ///jwt
 function decodeJWT(token) {
@@ -54,21 +56,23 @@ function isTokenValid(token) {
     }
 }
 
-
 const form = document.getElementById("login-form");
 if (form) form.addEventListener("submit", loginUser);
 
-const token = localStorage.getItem('token');
+// 🟢 FIX: Ensure token from localStorage is cleaned from quotes
+let token = localStorage.getItem('token');
+if (token) token = token.replace(/^"|"$/g, '');
 if (!isTokenValid(token)) localStorage.removeItem('token');
 
 // ---------------------------
 async function fetchUserData() {
-    const token = localStorage.getItem('token');
+    let token = localStorage.getItem('token');
+    if (!token) return;
+    token = token.replace(/^"|"$/g, ''); // 🟢 FIX: clean token again just in case
     if (!isTokenValid(token)) return;
-    const payload = decodeJWT(token);
-    // const userId = payload.sub; // the "sub" claim is usually the user id
-    const userId = Number(payload.sub);
 
+    const payload = decodeJWT(token);
+    const userId = Number(payload.sub);
 
     const query = `
     {
@@ -94,7 +98,6 @@ async function fetchUserData() {
         if (response.ok && result.data) {
             localStorage.setItem('userData', JSON.stringify(result.data.user));
             console.log('User data fetched:', result.data.user);
-            // window.location.href = 'profile.html';
         } else {
             console.error('GraphQL error:', result.errors);
             alert('Error fetching user data.');
@@ -105,11 +108,11 @@ async function fetchUserData() {
     }
 }
 
-// ---------------------------
-// 📝 FETCH XP DATA
-// ---------------------------
+
 async function fetchXpData(whereClause, storageKey) {
-    const token = localStorage.getItem('token');
+    let token = localStorage.getItem('token');
+    if (!token) return;
+    token = token.replace(/^"|"$/g, ''); // 🟢 FIX: clean token
     if (!isTokenValid(token)) return;
 
     const query = `
@@ -149,7 +152,7 @@ async function fetchXpData(whereClause, storageKey) {
     }
 }
 
-// 🎯 XP BY CATEGORY
+
 async function fetchUserProjectsXPData() {
     const where = `{
         _and: [
@@ -182,9 +185,7 @@ async function fetchJSPiscineXPData() {
     await fetchXpData(where, 'jspiscineXPData');
 }
 
-// ---------------------------
-// 📊 CALCULATE TOTAL XP
-// ---------------------------
+
 function calculateTotalXP() {
     const projectsXp = JSON.parse(localStorage.getItem('userXPData') || '[]');
     const checkpointsXp = JSON.parse(localStorage.getItem('userCheckpointsXPData') || '[]');
@@ -205,7 +206,6 @@ function calculateTotalXP() {
 
     return totals;
 }
-
 
 async function initDashboard() {
     await fetchUserData();

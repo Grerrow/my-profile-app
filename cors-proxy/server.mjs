@@ -6,7 +6,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.text({ type: "*/*" })); // ✅ Preserve raw body for GraphQL & auth requests
+app.use(express.json({ type: "*/*" }));
+
 
 app.all("/proxy", async (req, res) => {
   const targetUrl = req.query.url;

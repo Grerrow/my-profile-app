@@ -179,7 +179,7 @@ async function fetchJSPiscineXPData() {
     const where = `{
         _and: [
             { type: { _eq: "xp" } },
-            { path: { _like: "/athens/div-01/piscine-js%" } }
+            { path: { _like: "/athens/div-01/piscine-js" } }
         ]
     }`;
     await fetchXpData(where, 'jspiscineXPData');

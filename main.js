@@ -66,7 +66,8 @@ async function fetchUserData() {
     const token = localStorage.getItem('token');
     if (!isTokenValid(token)) return;
     const payload = decodeJWT(token);
-    const userId = payload.sub; // the "sub" claim is usually the user id
+    // const userId = payload.sub; // the "sub" claim is usually the user id
+    const userId = Number(payload.sub);
 
 
     const query = `

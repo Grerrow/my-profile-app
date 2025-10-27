@@ -6,11 +6,11 @@
     <link rel="stylesheet" href="styles.css">
     <title>Profile</title>
 </head>
+<header>
+    <h1 id="user-name">Loading...</h1>
+    <button id="logout">Logout</button>
+</header>
 <body>
-    <header>
-        <h1 id="user-name">Loading...</h1>
-        <button id="logout">Logout</button>
-    </header>
 
     <main>
         <section id="user-info">
@@ -46,11 +46,11 @@
     <div class="audit-stats">
       <p><strong>Done:</strong> <span id="auditDone">–</span></p>
       <p><strong>Received:</strong> <span id="auditReceived">–</span></p>
+      <p><strong>Ratio:</strong> <span id="auditRatio">–</span></p>
     </div>
 
     <div class="audit-visual">
-      <svg id="auditPie" width="150" height="150" viewBox="0 0 32 32"></svg>
-      <p><strong>Ratio:</strong> <span id="auditRatio">–</span></p>
+      <svg id="auditPie" width="300" height="250" viewBox="0 0 32 32"></svg>
     </div>
   </div>
 </section>
@@ -81,8 +81,6 @@
         document.getElementById('piscine-xp').textContent = `${totals.piscineJs.toLocaleString()} XP`;
         document.getElementById('total-xp').textContent = totals.total.toLocaleString();
 
-        // 🟢 REMOVED this line (totals.auditRatio may not exist)
-        // document.getElementById('auditRatio').textContent = totals.auditRatio.toFixed(2);
 
         // --- Logout ---
         document.getElementById('logout').addEventListener('click', () => {

@@ -218,12 +218,15 @@ async function auditRatio() {
     token = token.replace(/^"|"$/g, ''); // 🟢 Clean token again just in case
     if (!isTokenValid(token)) return;
 
+
+    const payload = decodeJWT(token);
+    const userId = Number(payload.sub);
+
     const query = `
     {
-      audit_ratio(order_by: { createdAt: desc }, limit: 1) {
-        ratio
-        createdAt
-      }
+      user(where: {id:{_eq: ${userId}}}){
+    auditRatio
+  }
     }`;
 
     try {
@@ -237,10 +240,10 @@ async function auditRatio() {
         });
 
         const result = await response.json();
-        if (response.ok && result.data && result.data.audit_ratio.length > 0) {
-            const latestRatio = result.data.audit_ratio[0].ratio;
-            localStorage.setItem('auditRatio', latestRatio); // 🟢 store only the value
-            console.log('Audit ratio fetched:', latestRatio);
+        if (response.ok && result.data && result.data.user.length > 0) {
+            const ratio = result.data.user[0].auditRatio; // 🟢 Access via [0]
+            localStorage.setItem('auditRatio', ratio); // 🟢 Save just the number
+            console.log('Audit ratio fetched:', ratio);
         } else {
             console.error('GraphQL error:', result.errors);
         }

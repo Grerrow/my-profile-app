@@ -29,7 +29,7 @@
                 <p id="checkpoints-xp">0 XP</p>
             </div>
             <div class="xp-box">
-                <h3>JS Piscine XP</h3>
+                <h3>Piscine-Js XP and Bonus XP</h3>
                 <p id="piscine-xp">0 XP</p>
             </div>
         </section>
@@ -41,10 +41,20 @@
 
         <!-- 🟢 NEW SECTION -->
         <section id="audit-section">
-            <h3>Audit Ratio</h3>
-            <p><strong>Ratio:</strong> <span id="auditRatio">Loading...</span></p>
-            <svg id="auditPie" width="150" height="150" viewBox="0 0 32 32"></svg>
-        </section>
+  <h3>Audit Ratio</h3>
+  <div class="audit-box">
+    <div class="audit-stats">
+      <p><strong>Done:</strong> <span id="auditDone">–</span></p>
+      <p><strong>Received:</strong> <span id="auditReceived">–</span></p>
+    </div>
+
+    <div class="audit-visual">
+      <svg id="auditPie" width="150" height="150" viewBox="0 0 32 32"></svg>
+      <p><strong>Ratio:</strong> <span id="auditRatio">–</span></p>
+    </div>
+  </div>
+</section>
+
 
     </main>
 
@@ -115,48 +125,43 @@
             svg.appendChild(label);
         });
 
-        // 🟢 Load and show audit ratio
-        const auditRatioValue = parseFloat(localStorage.getItem('auditRatio')) || 0;
-        document.getElementById('auditRatio').textContent = auditRatioValue.toFixed(2);
+        // --- Audit display ---
+const auditRatioValue = parseFloat(localStorage.getItem('auditRatio')) || 0;
+const auditDone = parseFloat(localStorage.getItem('auditDone')) || 0;
+const auditReceived = parseFloat(localStorage.getItem('auditReceived')) || 0;
 
-        // --- Draw Pie SVG ---
-        const pie = document.getElementById("auditPie");
-        pie.innerHTML = ""; // clear old
-        const percent = Math.min(Math.max(auditRatioValue, 0), 2); // clamp between 0–2
+document.getElementById('auditRatio').textContent = auditRatioValue.toFixed(2);
+document.getElementById('auditDone').textContent = `${(auditDone / 1000).toFixed(2)} MB`;
+document.getElementById('auditReceived').textContent = `${(auditReceived / 1000).toFixed(2)} MB`;
 
-        // convert ratio to % (1.0 = 50%)
-        const portion = Math.min(percent / 2, 1);
-        const radius = 16;
-        const circumference = 2 * Math.PI * radius;
-        const filled = portion * circumference;
+// --- Pie drawing ---
+const pie = document.getElementById("auditPie");
+pie.innerHTML = "";
+const radius = 16;
+const circumference = 2 * Math.PI * radius;
+const ratioFill = Math.min(auditRatioValue / 2, 1);
+const filled = ratioFill * circumference;
 
-        const bgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        bgCircle.setAttribute("r", radius);
-        bgCircle.setAttribute("cx", 16);
-        bgCircle.setAttribute("cy", 16);
-        bgCircle.setAttribute("fill", "none");
-        bgCircle.setAttribute("stroke", "#ddd");
-        bgCircle.setAttribute("stroke-width", "4");
-        pie.appendChild(bgCircle);
+const bgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+bgCircle.setAttribute("r", radius);
+bgCircle.setAttribute("cx", 16);
+bgCircle.setAttribute("cy", 16);
+bgCircle.setAttribute("fill", "none");
+bgCircle.setAttribute("stroke", "#ddd");
+bgCircle.setAttribute("stroke-width", "4");
+pie.appendChild(bgCircle);
 
-        const fgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        fgCircle.setAttribute("r", radius);
-        fgCircle.setAttribute("cx", 16);
-        fgCircle.setAttribute("cy", 16);
-        fgCircle.setAttribute("fill", "none");
-        fgCircle.setAttribute("stroke", "#4caf50");
-        fgCircle.setAttribute("stroke-width", "4");
-        fgCircle.setAttribute("stroke-dasharray", `${filled} ${circumference - filled}`);
-        fgCircle.setAttribute("transform", "rotate(-90 16 16)");
-        pie.appendChild(fgCircle);
+const fgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+fgCircle.setAttribute("r", radius);
+fgCircle.setAttribute("cx", 16);
+fgCircle.setAttribute("cy", 16);
+fgCircle.setAttribute("fill", "none");
+fgCircle.setAttribute("stroke", auditRatioValue >= 1 ? "#4caf50" : "#f44336");
+fgCircle.setAttribute("stroke-width", "4");
+fgCircle.setAttribute("stroke-dasharray", `${filled} ${circumference - filled}`);
+fgCircle.setAttribute("transform", "rotate(-90 16 16)");
+pie.appendChild(fgCircle);
 
-        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        text.setAttribute("x", "16");
-        text.setAttribute("y", "20");
-        text.setAttribute("text-anchor", "middle");
-        text.setAttribute("font-size", "8");
-        text.textContent = `${(portion * 100).toFixed(0)}%`;
-        pie.appendChild(text);
 
     </script>
 </body>

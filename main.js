@@ -226,6 +226,8 @@ async function auditRatio() {
     {
       user(where: {id:{_eq: ${userId}}}){
     auditRatio
+    totalUp
+    totalDown
   }
     }`;
 
@@ -242,7 +244,9 @@ async function auditRatio() {
         const result = await response.json();
         if (response.ok && result.data && result.data.user.length > 0) {
             const ratio = result.data.user[0].auditRatio; // 🟢 Access via [0]
-            localStorage.setItem('auditRatio', ratio); // 🟢 Save just the number
+            localStorage.setItem('auditRatio', result.data.user[0].auditRatio);
+            localStorage.setItem('auditDone', result.data.user[0].totalUp);
+            localStorage.setItem('auditReceived', result.data.user[0].totalDown);
             console.log('Audit ratio fetched:', ratio);
         } else {
             console.error('GraphQL error:', result.errors);

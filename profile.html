@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
     <title>Profile</title>
-
-    
 </head>
 <body>
     <header>
@@ -40,6 +38,14 @@
             <h2>My Statistics</h2>
             <svg id="xp-graph"></svg>
         </section>
+
+        <!-- 🟢 NEW SECTION -->
+        <section id="audit-section">
+            <h3>Audit Ratio</h3>
+            <p><strong>Ratio:</strong> <span id="auditRatio">Loading...</span></p>
+            <svg id="auditPie" width="150" height="150" viewBox="0 0 32 32"></svg>
+        </section>
+
     </main>
 
     <script src="main.js"></script>
@@ -65,6 +71,9 @@
         document.getElementById('piscine-xp').textContent = `${totals.piscineJs.toLocaleString()} XP`;
         document.getElementById('total-xp').textContent = totals.total.toLocaleString();
 
+        // 🟢 REMOVED this line (totals.auditRatio may not exist)
+        // document.getElementById('auditRatio').textContent = totals.auditRatio.toFixed(2);
+
         // --- Logout ---
         document.getElementById('logout').addEventListener('click', () => {
             localStorage.clear();
@@ -76,7 +85,7 @@
         const barData = [
             { label: 'Projects', value: totals.projects, color: '#4caf50' },
             { label: 'Checkpoints', value: totals.checkpoints, color: '#81c784' },
-            { label: 'Piscine JS', value: totals.piscineJs, color: '#a5d6a7' },
+            { label: 'Piscine JS and Bonus XP', value: totals.piscineJs, color: '#a5d6a7' },
         ];
 
         const maxValue = Math.max(...barData.map(b => b.value)) || 1;
@@ -105,6 +114,50 @@
             label.textContent = bar.label;
             svg.appendChild(label);
         });
+
+        // 🟢 Load and show audit ratio
+        const auditRatioValue = parseFloat(localStorage.getItem('auditRatio')) || 0;
+        document.getElementById('auditRatio').textContent = auditRatioValue.toFixed(2);
+
+        // --- Draw Pie SVG ---
+        const pie = document.getElementById("auditPie");
+        pie.innerHTML = ""; // clear old
+        const percent = Math.min(Math.max(auditRatioValue, 0), 2); // clamp between 0–2
+
+        // convert ratio to % (1.0 = 50%)
+        const portion = Math.min(percent / 2, 1);
+        const radius = 16;
+        const circumference = 2 * Math.PI * radius;
+        const filled = portion * circumference;
+
+        const bgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        bgCircle.setAttribute("r", radius);
+        bgCircle.setAttribute("cx", 16);
+        bgCircle.setAttribute("cy", 16);
+        bgCircle.setAttribute("fill", "none");
+        bgCircle.setAttribute("stroke", "#ddd");
+        bgCircle.setAttribute("stroke-width", "4");
+        pie.appendChild(bgCircle);
+
+        const fgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        fgCircle.setAttribute("r", radius);
+        fgCircle.setAttribute("cx", 16);
+        fgCircle.setAttribute("cy", 16);
+        fgCircle.setAttribute("fill", "none");
+        fgCircle.setAttribute("stroke", "#4caf50");
+        fgCircle.setAttribute("stroke-width", "4");
+        fgCircle.setAttribute("stroke-dasharray", `${filled} ${circumference - filled}`);
+        fgCircle.setAttribute("transform", "rotate(-90 16 16)");
+        pie.appendChild(fgCircle);
+
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", "16");
+        text.setAttribute("y", "20");
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("font-size", "8");
+        text.textContent = `${(portion * 100).toFixed(0)}%`;
+        pie.appendChild(text);
+
     </script>
 </body>
 </html>

@@ -179,7 +179,12 @@ async function fetchJSPiscineXPData() {
     const where = `{
         _and: [
             { type: { _eq: "xp" } },
+            {
+          _or: [
+            { path: { _like: "/athens/div-01" } }
             { path: { _like: "/athens/div-01/piscine-js" } }
+          ]
+        }
         ]
     }`;
     await fetchXpData(where, 'jspiscineXPData');
@@ -207,11 +212,50 @@ function calculateTotalXP() {
     return totals;
 }
 
+async function auditRatio() {
+    let token = localStorage.getItem('token');
+    if (!token) return;
+    token = token.replace(/^"|"$/g, ''); // 🟢 Clean token again just in case
+    if (!isTokenValid(token)) return;
+
+    const query = `
+    {
+      audit_ratio(order_by: { createdAt: desc }, limit: 1) {
+        ratio
+        createdAt
+      }
+    }`;
+
+    try {
+        const response = await fetch(`${proxyurl}${encodeURIComponent('https://platform.zone01.gr/api/graphql-engine/v1/graphql')}`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ query })
+        });
+
+        const result = await response.json();
+        if (response.ok && result.data && result.data.audit_ratio.length > 0) {
+            const latestRatio = result.data.audit_ratio[0].ratio;
+            localStorage.setItem('auditRatio', latestRatio); // 🟢 store only the value
+            console.log('Audit ratio fetched:', latestRatio);
+        } else {
+            console.error('GraphQL error:', result.errors);
+        }
+    } catch (err) {
+        console.error('Fetch audit ratio data error:', err);
+    }
+}
+
+
 async function initDashboard() {
     await fetchUserData();
     await fetchUserProjectsXPData();
     await fetchUserCheckpointsXPData();
     await fetchJSPiscineXPData();
+    await auditRatio();
     calculateTotalXP();
     // window.location.href = 'profile.html';
 }

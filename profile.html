@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width" />
   <link rel="stylesheet" href="styles.css" />
-  <title>Profile</title>
+  <title>Profile Dashboard</title>
   
 </head>
 
@@ -22,7 +22,7 @@
       <p><strong>Total XP:</strong> <span id="total-xp"></span> XP</p>
     </section>
 
-    <!-- XP Stats -->
+    <!-- XP Overview Boxes -->
     <section id="stats">
       <div class="xp-box">
         <h3>Projects XP</h3>
@@ -33,41 +33,68 @@
         <p id="checkpoints-xp">0 XP</p>
       </div>
       <div class="xp-box">
-        <h3>Piscine-Js XP + Bonus</h3>
+        <h3>Piscine-JS + Bonus XP</h3>
         <p id="piscine-xp">0 XP</p>
       </div>
     </section>
 
-    <!-- Audit Ratio -->
-    <section id="audit-section">
-      <div class="audit-visual">
-        <svg id="auditPie" viewBox="0 0 36 36">
-          <circle cx="18" cy="18" r="15.915" fill="none" stroke="#eee" stroke-width="3"></circle>
-          <circle id="auditProgress" cx="18" cy="18" r="15.915" fill="none" stroke="#4caf50" stroke-width="3" stroke-dasharray="0 100"></circle>
-        </svg>
-        <div class="audit-text">
-          <h4 id="auditRatio">0.00</h4>
-          <small>Ratio</small>
-        </div>
-      </div>
-      <div class="audit-stats">
-        <p><strong>Done:</strong> <span id="auditDone">–</span></p>
-        <p><strong>Received:</strong> <span id="auditReceived">–</span></p>
+    <!-- 🟢 XP Composition Donut -->
+    <section id="xp-donut-section">
+      <h2>XP Composition</h2>
+      <div class="chart-container">
+        <svg id="xpDonut" viewBox="0 0 32 32"></svg>
+        <div id="xp-legend" class="chart-legend"></div>
       </div>
     </section>
 
-    <!-- XP Donut -->
-    <section id="xp-donut-section">
-      <h3>XP by Project</h3>
-      <svg id="xpDonut" viewBox="0 0 32 32"></svg>
-      <div id="xp-legend"></div>
+    <!-- 🟢 XP by Project Bar Chart -->
+    <section id="project-xp-section">
+      <h2>XP by Project</h2>
+      <svg id="projectBarChart"></svg>
     </section>
+
+   
+    <!-- Audit Ratio -->
+<section id="audit-section">
+  <h2>Audit Performance</h2>
+  <div class="chart-container">
+    <div class="audit-visual">
+      <svg id="auditPie" viewBox="0 0 36 36">
+        <!-- Base circle background -->
+        <circle cx="18" cy="18" r="15.915" fill="none" stroke="#eee" stroke-width="3"></circle>
+        <!-- Done (green) -->
+        <circle id="auditDoneArc" cx="18" cy="18" r="15.915"
+                fill="none" stroke="#4caf50" stroke-width="4"
+                stroke-dasharray="0 100" stroke-linecap="round"></circle>
+        <!-- Received (blue) -->
+        <circle id="auditReceivedArc" cx="18" cy="18" r="15.915"
+                fill="none" stroke="#2196f3" stroke-width="4"
+                stroke-dasharray="0 100" stroke-linecap="round"></circle>
+      </svg>
+
+      <div class="audit-text">
+        <h4 id="auditRatio">0.00</h4>
+        <small>Audit Ratio</small>
+      </div>
+    </div>
+
+    <div>
+      <p><strong>Done:</strong> <span id="auditDone">–</span></p>
+      <p><strong>Received:</strong> <span id="auditReceived">–</span></p>
+      <div class="chart-legend">
+        <div><span style="background:#4caf50"></span> Done</div>
+        <div><span style="background:#2196f3"></span> Received</div>
+      </div>
+    </div>
+  </div>
+</section>
+
   </main>
 
   <script src="main.js"></script>
 
   <script>
-    // --- Populate user data ---
+    // --- Load User Info ---
     const userData = JSON.parse(localStorage.getItem("userData"));
     if (userData?.length) {
       const user = userData[0];
@@ -77,104 +104,130 @@
       document.getElementById("user-email").textContent = user.email || "N/A";
     }
 
-    // --- XP Totals ---
     const totals = JSON.parse(localStorage.getItem("totalXPStats")) || {};
     document.getElementById("projects-xp").textContent = `${(totals.projects || 0).toLocaleString()} XP`;
     document.getElementById("checkpoints-xp").textContent = `${(totals.checkpoints || 0).toLocaleString()} XP`;
     document.getElementById("piscine-xp").textContent = `${(totals.piscineJs || 0).toLocaleString()} XP`;
     document.getElementById("total-xp").textContent = (totals.total || 0).toLocaleString();
 
-    // --- Logout ---
     document.getElementById("logout").addEventListener("click", () => {
       localStorage.clear();
       window.location.href = "index.html";
     });
 
-    // --- Audit Pie ---
-    const ratio = parseFloat(localStorage.getItem("auditRatio")) || 0;
-    const done = parseFloat(localStorage.getItem("auditDone")) || 0;
-    const received = parseFloat(localStorage.getItem("auditReceived")) || 0;
+    // --- XP Donut Chart ---
+    const donutColors = ["#4caf50", "#81c784", "#a5d6a7"];
+    const xpParts = [
+      { label: "Projects", value: totals.projects || 0 },
+      { label: "Checkpoints", value: totals.checkpoints || 0 },
+      { label: "Piscine + Bonus", value: totals.piscineJs || 0 },
+    ];
+    const total = xpParts.reduce((a, b) => a + b.value, 0);
+    const svg = document.getElementById("xpDonut");
+    const radius = 15.9;
+    const circumference = 2 * Math.PI * radius;
+    let offset = 0;
 
-    document.getElementById("auditRatio").textContent = ratio.toFixed(2);
-    document.getElementById("auditDone").textContent = `${(done / 1000).toFixed(2)} MB`;
-    document.getElementById("auditReceived").textContent = `${(received / 1000).toFixed(2)} MB`;
+    xpParts.forEach((p, i) => {
+      const pct = total ? p.value / total : 0;
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("r", radius);
+      circle.setAttribute("cx", 16);
+      circle.setAttribute("cy", 16);
+      circle.setAttribute("fill", "none");
+      circle.setAttribute("stroke", donutColors[i]);
+      circle.setAttribute("stroke-width", "5");
+      circle.setAttribute("stroke-dasharray", `${pct * circumference} ${circumference - pct * circumference}`);
+      circle.setAttribute("stroke-dashoffset", -offset);
+      circle.style.transition = "stroke-dasharray 0.5s ease";
+      offset += pct * circumference;
+      svg.appendChild(circle);
+    });
 
-    const circle = document.getElementById("auditProgress");
-    const circumference = 2 * Math.PI * 15.915;
-    const progress = Math.min(ratio, 2) / 2; // normalize around 1.0
-    const filled = progress * circumference;
-    circle.setAttribute("stroke-dasharray", `${filled} ${circumference - filled}`);
-    circle.setAttribute("stroke", ratio >= 1 ? "#4caf50" : "#f44336");
+    const centerText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    centerText.setAttribute("x", "16");
+    centerText.setAttribute("y", "18");
+    centerText.setAttribute("text-anchor", "middle");
+    centerText.setAttribute("font-size", "4");
+    centerText.textContent = `${(total / 1000).toFixed(1)}k XP`;
+    svg.appendChild(centerText);
 
-    // --- XP Donut ---
-    (function drawXpDonut() {
-      const xpData = JSON.parse(localStorage.getItem("userXPData")) || [];
-      if (!xpData.length) return;
+    const legend = document.getElementById("xp-legend");
+    legend.innerHTML = "";
+    xpParts.forEach((p, i) => {
+      const item = document.createElement("div");
+      item.innerHTML = `<span style="background:${donutColors[i]}"></span>${p.label}`;
+      legend.appendChild(item);
+    });
 
-      const projectXP = {};
-      xpData.forEach(tx => {
-        const name = tx.object?.name || tx.path.split("/").pop();
-        projectXP[name] = (projectXP[name] || 0) + (tx.amount || 0);
-      });
+    // --- Bar Chart (XP by Project) ---
+    const barData = JSON.parse(localStorage.getItem("userXPData")) || [];
+    const projectXP = {};
+    barData.forEach(tx => {
+      const name = tx.object?.name || tx.path.split("/").pop();
+      projectXP[name] = (projectXP[name] || 0) + (tx.amount || 0);
+    });
 
-      const data = Object.entries(projectXP).map(([name, xp]) => ({ name, xp }));
-      const totalXP = data.reduce((a, b) => a + b.xp, 0);
-      const radius = 15.9;
-      const svg = document.getElementById("xpDonut");
-      svg.innerHTML = "";
+    const sorted = Object.entries(projectXP).sort((a, b) => b[1] - a[1]).slice(0, 8);
+    const barSvg = document.getElementById("projectBarChart");
+    barSvg.innerHTML = "";
+    const maxVal = Math.max(...sorted.map(s => s[1]), 1);
+    const barWidth = 40;
+    const chartHeight = 300;
 
-      const colors = [
-        "#4caf50", "#2196f3", "#ff9800", "#9c27b0",
-        "#03a9f4", "#e91e63", "#8bc34a", "#795548"
-      ];
-      let cumulative = 0;
+    sorted.forEach(([name, val], i) => {
+      const barHeight = (val / maxVal) * (chartHeight - 50);
+      const x = 70 + i * (barWidth + 40);
+      const y = chartHeight - barHeight - 30;
 
-      data.forEach((p, i) => {
-        const start = (cumulative / totalXP) * 2 * Math.PI;
-        cumulative += p.xp;
-        const end = (cumulative / totalXP) * 2 * Math.PI;
-        const largeArc = end - start > Math.PI ? 1 : 0;
-        const x1 = 16 + radius * Math.sin(start);
-        const y1 = 16 - radius * Math.cos(start);
-        const x2 = 16 + radius * Math.sin(end);
-        const y2 = 16 - radius * Math.cos(end);
+      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      rect.setAttribute("x", x);
+      rect.setAttribute("y", y);
+      rect.setAttribute("width", barWidth);
+      rect.setAttribute("height", barHeight);
+      rect.setAttribute("fill", "#4caf50");
+      rect.style.transition = "height 0.5s ease";
+      barSvg.appendChild(rect);
 
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute("d", `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`);
-        path.setAttribute("stroke", colors[i % colors.length]);
-        path.setAttribute("stroke-width", "5");
-        path.setAttribute("fill", "none");
-        path.style.transition = "stroke-dasharray 0.5s ease";
+      const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      label.setAttribute("x", x + barWidth / 2);
+      label.setAttribute("y", chartHeight - 10);
+      label.setAttribute("text-anchor", "middle");
+      label.setAttribute("font-size", "10");
+      label.textContent = name.length > 8 ? name.slice(0, 8) + "…" : name;
+      barSvg.appendChild(label);
+    });
 
-        // Tooltip
-        path.addEventListener("mouseenter", () => {
-          path.setAttribute("stroke-width", "7");
-          path.style.cursor = "pointer";
-        });
-        path.addEventListener("mouseleave", () => {
-          path.setAttribute("stroke-width", "5");
-        });
+    // --- Audit Ratio Visualization ---
+const ratio = parseFloat(localStorage.getItem("auditRatio")) || 0;
+const done = parseFloat(localStorage.getItem("auditDone")) || 0;
+const received = parseFloat(localStorage.getItem("auditReceived")) || 0;
 
-        svg.appendChild(path);
-      });
+document.getElementById("auditRatio").textContent = ratio.toFixed(2);
+document.getElementById("auditDone").textContent = `${(done / 1000).toFixed(2)} MB`;
+document.getElementById("auditReceived").textContent = `${(received / 1000).toFixed(2)} MB`;
 
-      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      text.setAttribute("x", "16");
-      text.setAttribute("y", "18");
-      text.setAttribute("text-anchor", "middle");
-      text.setAttribute("font-size", "4");
-      text.textContent = `${(totalXP / 1000).toFixed(1)}k XP`;
-      svg.appendChild(text);
+const circ = 2 * Math.PI * 15.915;
 
-      // Legend
-      const legend = document.getElementById("xp-legend");
-      legend.innerHTML = "";
-      data.forEach((p, i) => {
-        const item = document.createElement("div");
-        item.innerHTML = `<span style="background:${colors[i % colors.length]}"></span>${p.name}`;
-        legend.appendChild(item);
-      });
-    })();
+// total = sum of both values (avoid divide by zero)
+const totalAudits = done + received;
+const donePercent = totalAudits ? (done / totalAudits) : 0;
+const receivedPercent = totalAudits ? (received / totalAudits) : 0;
+
+// Calculate arcs
+const doneArc = document.getElementById("auditDoneArc");
+const receivedArc = document.getElementById("auditReceivedArc");
+
+doneArc.setAttribute("stroke-dasharray", `${donePercent * circ} ${circ - donePercent * circ}`);
+receivedArc.setAttribute("stroke-dasharray", `${receivedPercent * circ} ${circ - receivedPercent * circ}`);
+
+// Offset the second arc to start where the first ended
+receivedArc.setAttribute("stroke-dashoffset", -donePercent * circ);
+
+// Adjust coloring: if done < received, make done orange to warn
+if (done < received) {
+  doneArc.setAttribute("stroke", "#ff9800");
+}
   </script>
 </body>
 </html>

@@ -55,6 +55,14 @@
   </div>
 </section>
 
+<!-- 🟢 XP by Project Donut Chart -->
+<section id="xp-donut-section">
+  <h3>XP by Project</h3>
+  <svg id="xpDonut" width="200" height="200" viewBox="0 0 32 32"></svg>
+  <div id="xp-legend" style="display:flex;flex-wrap:wrap;gap:8px;font-size:12px;justify-content:center;margin-top:10px;"></div>
+</section>
+
+
 
     </main>
 
@@ -159,6 +167,84 @@ fgCircle.setAttribute("stroke-width", "4");
 fgCircle.setAttribute("stroke-dasharray", `${filled} ${circumference - filled}`);
 fgCircle.setAttribute("transform", "rotate(-90 16 16)");
 pie.appendChild(fgCircle);
+
+
+        // -------------------- XP Donut Chart --------------------
+(function drawXpDonut() {
+  const xpData = JSON.parse(localStorage.getItem("userXPData")) || [];
+  if (!xpData.length) return;
+
+  // 🟢 Aggregate XP by project name
+  const projectXP = {};
+  xpData.forEach(tx => {
+    const name = tx.object?.name || tx.path.split("/").pop();
+    projectXP[name] = (projectXP[name] || 0) + (tx.amount || 0);
+  });
+
+  const data = Object.entries(projectXP).map(([name, xp]) => ({ name, xp }));
+  const totalXP = data.reduce((a,b)=>a+b.xp,0);
+  const radius = 15.9;
+  const palette = ["#4caf50", "#2196f3", "#ff9800", "#9c27b0", "#03a9f4", "#e91e63", "#8bc34a"];
+  let cumulative = 0;
+
+  const svg = document.getElementById("xpDonut");
+  svg.innerHTML = "";
+
+  data.forEach((p, i) => {
+    const start = (cumulative / totalXP) * 2 * Math.PI;
+    cumulative += p.xp;
+    const end = (cumulative / totalXP) * 2 * Math.PI;
+    const largeArc = end - start > Math.PI ? 1 : 0;
+
+    const x1 = 16 + radius * Math.sin(start);
+    const y1 = 16 - radius * Math.cos(start);
+    const x2 = 16 + radius * Math.sin(end);
+    const y2 = 16 - radius * Math.cos(end);
+
+    const pathData = `
+      M ${x1} ${y1}
+      A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}
+    `;
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", pathData);
+    path.setAttribute("stroke", palette[i % palette.length]);
+    path.setAttribute("stroke-width", "5");
+    path.setAttribute("fill", "none");
+    path.style.strokeDasharray = "0 100"; // start hidden
+    svg.appendChild(path);
+
+    // 🟢 Animate slice
+    setTimeout(() => {
+      path.animate(
+        [{ strokeDasharray: "0 100" }, { strokeDasharray: "100 0" }],
+        { duration: 700, fill: "forwards", delay: i * 150 }
+      );
+    }, 200);
+  });
+
+  // 🟢 Center total label
+  const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  text.setAttribute("x", "16");
+  text.setAttribute("y", "18");
+  text.setAttribute("text-anchor", "middle");
+  text.setAttribute("font-size", "4");
+  text.textContent = `${(totalXP / 1000).toFixed(1)}k XP`;
+  svg.appendChild(text);
+
+  // 🟢 Legend
+  const legend = document.getElementById("xp-legend");
+  legend.innerHTML = "";
+  data.forEach((p, i) => {
+    const item = document.createElement("div");
+    item.innerHTML = `
+      <span style="display:inline-block;width:10px;height:10px;background:${palette[i % palette.length]};margin-right:4px;border-radius:2px;"></span>
+      ${p.name}
+    `;
+    legend.appendChild(item);
+  });
+})();
+
 
 
     </script>

@@ -125,7 +125,7 @@ function drawXPByProject() {
   const projects = Object.entries(projectXP)
     .map(([name, xp]) => ({ name, xp }))
     .sort((a, b) => b.xp - a.xp)
-    .slice(0, 10); // limit top 10
+    // .slice(0, 10); // limit top 10
 
   const svgWidth = 500;
   const svgHeight = 250;

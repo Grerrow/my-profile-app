@@ -1,252 +1,180 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width">
-    <link rel="stylesheet" href="styles.css">
-    <title>Profile</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>Profile</title>
+  
 </head>
-<header>
+
+<body>
+  <header>
     <h1 id="user-name">Loading...</h1>
     <button id="logout">Logout</button>
-</header>
-<body>
+  </header>
 
-    <main>
-        <section id="user-info">
-            <p><strong>Login:</strong> <span id="user-login"></span></p>
-            <p><strong>Email:</strong> <span id="user-email"></span></p>
-            <p><strong>Total XP:</strong> <span id="total-xp"></span> XP</p>
-        </section>
+  <main>
+    <!-- User Info -->
+    <section id="user-info">
+      <p><strong>Login:</strong> <span id="user-login"></span></p>
+      <p><strong>Email:</strong> <span id="user-email"></span></p>
+      <p><strong>Total XP:</strong> <span id="total-xp"></span> XP</p>
+    </section>
 
-        <section id="stats">
-            <div class="xp-box">
-                <h3>Projects XP</h3>
-                <p id="projects-xp">0 XP</p>
-            </div>
-            <div class="xp-box">
-                <h3>Checkpoints XP</h3>
-                <p id="checkpoints-xp">0 XP</p>
-            </div>
-            <div class="xp-box">
-                <h3>Piscine-Js XP and Bonus XP</h3>
-                <p id="piscine-xp">0 XP</p>
-            </div>
-        </section>
+    <!-- XP Stats -->
+    <section id="stats">
+      <div class="xp-box">
+        <h3>Projects XP</h3>
+        <p id="projects-xp">0 XP</p>
+      </div>
+      <div class="xp-box">
+        <h3>Checkpoints XP</h3>
+        <p id="checkpoints-xp">0 XP</p>
+      </div>
+      <div class="xp-box">
+        <h3>Piscine-Js XP + Bonus</h3>
+        <p id="piscine-xp">0 XP</p>
+      </div>
+    </section>
 
-        <section id="graphs">
-            <h2>My Statistics</h2>
-            <svg id="xp-graph"></svg>
-        </section>
+    <!-- Audit Ratio -->
+    <section id="audit-section">
+      <div class="audit-visual">
+        <svg id="auditPie" viewBox="0 0 36 36">
+          <circle cx="18" cy="18" r="15.915" fill="none" stroke="#eee" stroke-width="3"></circle>
+          <circle id="auditProgress" cx="18" cy="18" r="15.915" fill="none" stroke="#4caf50" stroke-width="3" stroke-dasharray="0 100"></circle>
+        </svg>
+        <div class="audit-text">
+          <h4 id="auditRatio">0.00</h4>
+          <small>Ratio</small>
+        </div>
+      </div>
+      <div class="audit-stats">
+        <p><strong>Done:</strong> <span id="auditDone">–</span></p>
+        <p><strong>Received:</strong> <span id="auditReceived">–</span></p>
+      </div>
+    </section>
 
-        <!-- 🟢 NEW SECTION -->
-        <section id="audit-section">
-  <h3>Audit Ratio</h3>
-  <div class="audit-box">
-    <div class="audit-stats">
-      <p><strong>Done:</strong> <span id="auditDone">–</span></p>
-      <p><strong>Received:</strong> <span id="auditReceived">–</span></p>
-      <p><strong>Ratio:</strong> <span id="auditRatio">–</span></p>
-    </div>
+    <!-- XP Donut -->
+    <section id="xp-donut-section">
+      <h3>XP by Project</h3>
+      <svg id="xpDonut" viewBox="0 0 32 32"></svg>
+      <div id="xp-legend"></div>
+    </section>
+  </main>
 
-    <div class="audit-visual">
-      <svg id="auditPie" width="300" height="250" viewBox="0 0 32 32"></svg>
-    </div>
-  </div>
-</section>
+  <script src="main.js"></script>
 
-<!-- 🟢 XP by Project Donut Chart -->
-<section id="xp-donut-section">
-  <h3>XP by Project</h3>
-  <svg id="xpDonut" width="200" height="200" viewBox="0 0 32 32"></svg>
-  <div id="xp-legend" style="display:flex;flex-wrap:wrap;gap:8px;font-size:12px;justify-content:center;margin-top:10px;"></div>
-</section>
+  <script>
+    // --- Populate user data ---
+    const userData = JSON.parse(localStorage.getItem("userData"));
+    if (userData?.length) {
+      const user = userData[0];
+      document.title = `Profile - ${user.login}`;
+      document.getElementById("user-name").textContent = `${user.firstName} ${user.lastName}`;
+      document.getElementById("user-login").textContent = user.login;
+      document.getElementById("user-email").textContent = user.email || "N/A";
+    }
 
+    // --- XP Totals ---
+    const totals = JSON.parse(localStorage.getItem("totalXPStats")) || {};
+    document.getElementById("projects-xp").textContent = `${(totals.projects || 0).toLocaleString()} XP`;
+    document.getElementById("checkpoints-xp").textContent = `${(totals.checkpoints || 0).toLocaleString()} XP`;
+    document.getElementById("piscine-xp").textContent = `${(totals.piscineJs || 0).toLocaleString()} XP`;
+    document.getElementById("total-xp").textContent = (totals.total || 0).toLocaleString();
 
+    // --- Logout ---
+    document.getElementById("logout").addEventListener("click", () => {
+      localStorage.clear();
+      window.location.href = "index.html";
+    });
 
-    </main>
+    // --- Audit Pie ---
+    const ratio = parseFloat(localStorage.getItem("auditRatio")) || 0;
+    const done = parseFloat(localStorage.getItem("auditDone")) || 0;
+    const received = parseFloat(localStorage.getItem("auditReceived")) || 0;
 
-    <script src="main.js"></script>
-    <script>
+    document.getElementById("auditRatio").textContent = ratio.toFixed(2);
+    document.getElementById("auditDone").textContent = `${(done / 1000).toFixed(2)} MB`;
+    document.getElementById("auditReceived").textContent = `${(received / 1000).toFixed(2)} MB`;
 
-        // --- Load user info ---
-        const userData = JSON.parse(localStorage.getItem('userData'));
-        if (userData && userData.length > 0) {
-            const user = userData[0];
-            document.title = `Profile - ${user.login}`;
-            document.getElementById('user-name').textContent = `${user.firstName} ${user.lastName}`;
-            document.getElementById('user-login').textContent = user.login;
-            document.getElementById('user-email').textContent = user.email || 'N/A';
-        } else {
-            console.warn('No user data found.');
-        }
+    const circle = document.getElementById("auditProgress");
+    const circumference = 2 * Math.PI * 15.915;
+    const progress = Math.min(ratio, 2) / 2; // normalize around 1.0
+    const filled = progress * circumference;
+    circle.setAttribute("stroke-dasharray", `${filled} ${circumference - filled}`);
+    circle.setAttribute("stroke", ratio >= 1 ? "#4caf50" : "#f44336");
 
-        // --- Get and display XP totals ---
-        const totals = JSON.parse(localStorage.getItem('totalXPStats')) || calculateTotalXP();
+    // --- XP Donut ---
+    (function drawXpDonut() {
+      const xpData = JSON.parse(localStorage.getItem("userXPData")) || [];
+      if (!xpData.length) return;
 
-        document.getElementById('projects-xp').textContent = `${totals.projects.toLocaleString()} XP`;
-        document.getElementById('checkpoints-xp').textContent = `${totals.checkpoints.toLocaleString()} XP`;
-        document.getElementById('piscine-xp').textContent = `${totals.piscineJs.toLocaleString()} XP`;
-        document.getElementById('total-xp').textContent = totals.total.toLocaleString();
+      const projectXP = {};
+      xpData.forEach(tx => {
+        const name = tx.object?.name || tx.path.split("/").pop();
+        projectXP[name] = (projectXP[name] || 0) + (tx.amount || 0);
+      });
 
+      const data = Object.entries(projectXP).map(([name, xp]) => ({ name, xp }));
+      const totalXP = data.reduce((a, b) => a + b.xp, 0);
+      const radius = 15.9;
+      const svg = document.getElementById("xpDonut");
+      svg.innerHTML = "";
 
-        // --- Logout ---
-        document.getElementById('logout').addEventListener('click', () => {
-            localStorage.clear();
-            window.location.href = 'index.html';
+      const colors = [
+        "#4caf50", "#2196f3", "#ff9800", "#9c27b0",
+        "#03a9f4", "#e91e63", "#8bc34a", "#795548"
+      ];
+      let cumulative = 0;
+
+      data.forEach((p, i) => {
+        const start = (cumulative / totalXP) * 2 * Math.PI;
+        cumulative += p.xp;
+        const end = (cumulative / totalXP) * 2 * Math.PI;
+        const largeArc = end - start > Math.PI ? 1 : 0;
+        const x1 = 16 + radius * Math.sin(start);
+        const y1 = 16 - radius * Math.cos(start);
+        const x2 = 16 + radius * Math.sin(end);
+        const y2 = 16 - radius * Math.cos(end);
+
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`);
+        path.setAttribute("stroke", colors[i % colors.length]);
+        path.setAttribute("stroke-width", "5");
+        path.setAttribute("fill", "none");
+        path.style.transition = "stroke-dasharray 0.5s ease";
+
+        // Tooltip
+        path.addEventListener("mouseenter", () => {
+          path.setAttribute("stroke-width", "7");
+          path.style.cursor = "pointer";
+        });
+        path.addEventListener("mouseleave", () => {
+          path.setAttribute("stroke-width", "5");
         });
 
-        // --- Simple example graph ---
-        const svg = document.getElementById('xp-graph');
-        const barData = [
-            { label: 'Projects', value: totals.projects, color: '#4caf50' },
-            { label: 'Checkpoints', value: totals.checkpoints, color: '#81c784' },
-            { label: 'Piscine JS and Bonus XP', value: totals.piscineJs, color: '#a5d6a7' },
-        ];
+        svg.appendChild(path);
+      });
 
-        const maxValue = Math.max(...barData.map(b => b.value)) || 1;
-        const svgHeight = 200;
-        const barWidth = 80;
-        const gap = 60;
+      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("x", "16");
+      text.setAttribute("y", "18");
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("font-size", "4");
+      text.textContent = `${(totalXP / 1000).toFixed(1)}k XP`;
+      svg.appendChild(text);
 
-        barData.forEach((bar, i) => {
-            const barHeight = (bar.value / maxValue) * (svgHeight - 30);
-            const x = 70 + i * (barWidth + gap);
-            const y = svgHeight - barHeight - 20;
-
-            const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-            rect.setAttribute("x", x);
-            rect.setAttribute("y", y);
-            rect.setAttribute("width", barWidth);
-            rect.setAttribute("height", barHeight);
-            rect.setAttribute("fill", bar.color);
-            svg.appendChild(rect);
-
-            const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-            label.setAttribute("x", x + barWidth / 2);
-            label.setAttribute("y", svgHeight - 5);
-            label.setAttribute("text-anchor", "middle");
-            label.setAttribute("font-size", "12");
-            label.textContent = bar.label;
-            svg.appendChild(label);
-        });
-
-        // --- Audit display ---
-const auditRatioValue = parseFloat(localStorage.getItem('auditRatio')) || 0;
-const auditDone = parseFloat(localStorage.getItem('auditDone')) || 0;
-const auditReceived = parseFloat(localStorage.getItem('auditReceived')) || 0;
-
-document.getElementById('auditRatio').textContent = auditRatioValue.toFixed(2);
-document.getElementById('auditDone').textContent = `${(auditDone / 1000).toFixed(2)} MB`;
-document.getElementById('auditReceived').textContent = `${(auditReceived / 1000).toFixed(2)} MB`;
-
-// --- Pie drawing ---
-const pie = document.getElementById("auditPie");
-pie.innerHTML = "";
-const radius = 16;
-const circumference = 2 * Math.PI * radius;
-const ratioFill = Math.min(auditRatioValue / 2, 1);
-const filled = ratioFill * circumference;
-
-const bgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-bgCircle.setAttribute("r", radius);
-bgCircle.setAttribute("cx", 16);
-bgCircle.setAttribute("cy", 16);
-bgCircle.setAttribute("fill", "none");
-bgCircle.setAttribute("stroke", "#ddd");
-bgCircle.setAttribute("stroke-width", "4");
-pie.appendChild(bgCircle);
-
-const fgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-fgCircle.setAttribute("r", radius);
-fgCircle.setAttribute("cx", 16);
-fgCircle.setAttribute("cy", 16);
-fgCircle.setAttribute("fill", "none");
-fgCircle.setAttribute("stroke", auditRatioValue >= 1 ? "#4caf50" : "#f44336");
-fgCircle.setAttribute("stroke-width", "4");
-fgCircle.setAttribute("stroke-dasharray", `${filled} ${circumference - filled}`);
-fgCircle.setAttribute("transform", "rotate(-90 16 16)");
-pie.appendChild(fgCircle);
-
-
-        // -------------------- XP Donut Chart --------------------
-(function drawXpDonut() {
-  const xpData = JSON.parse(localStorage.getItem("userXPData")) || [];
-  if (!xpData.length) return;
-
-  // 🟢 Aggregate XP by project name
-  const projectXP = {};
-  xpData.forEach(tx => {
-    const name = tx.object?.name || tx.path.split("/").pop();
-    projectXP[name] = (projectXP[name] || 0) + (tx.amount || 0);
-  });
-
-  const data = Object.entries(projectXP).map(([name, xp]) => ({ name, xp }));
-  const totalXP = data.reduce((a,b)=>a+b.xp,0);
-  const radius = 15.9;
-  const palette = ["#4caf50", "#2196f3", "#ff9800", "#9c27b0", "#03a9f4", "#e91e63", "#8bc34a"];
-  let cumulative = 0;
-
-  const svg = document.getElementById("xpDonut");
-  svg.innerHTML = "";
-
-  data.forEach((p, i) => {
-    const start = (cumulative / totalXP) * 2 * Math.PI;
-    cumulative += p.xp;
-    const end = (cumulative / totalXP) * 2 * Math.PI;
-    const largeArc = end - start > Math.PI ? 1 : 0;
-
-    const x1 = 16 + radius * Math.sin(start);
-    const y1 = 16 - radius * Math.cos(start);
-    const x2 = 16 + radius * Math.sin(end);
-    const y2 = 16 - radius * Math.cos(end);
-
-    const pathData = `
-      M ${x1} ${y1}
-      A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}
-    `;
-
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", pathData);
-    path.setAttribute("stroke", palette[i % palette.length]);
-    path.setAttribute("stroke-width", "5");
-    path.setAttribute("fill", "none");
-    path.style.strokeDasharray = "0 100"; // start hidden
-    svg.appendChild(path);
-
-    // 🟢 Animate slice
-    setTimeout(() => {
-      path.animate(
-        [{ strokeDasharray: "0 100" }, { strokeDasharray: "100 0" }],
-        { duration: 700, fill: "forwards", delay: i * 150 }
-      );
-    }, 200);
-  });
-
-  // 🟢 Center total label
-  const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-  text.setAttribute("x", "16");
-  text.setAttribute("y", "18");
-  text.setAttribute("text-anchor", "middle");
-  text.setAttribute("font-size", "4");
-  text.textContent = `${(totalXP / 1000).toFixed(1)}k XP`;
-  svg.appendChild(text);
-
-  // 🟢 Legend
-  const legend = document.getElementById("xp-legend");
-  legend.innerHTML = "";
-  data.forEach((p, i) => {
-    const item = document.createElement("div");
-    item.innerHTML = `
-      <span style="display:inline-block;width:10px;height:10px;background:${palette[i % palette.length]};margin-right:4px;border-radius:2px;"></span>
-      ${p.name}
-    `;
-    legend.appendChild(item);
-  });
-})();
-
-
-
-    </script>
+      // Legend
+      const legend = document.getElementById("xp-legend");
+      legend.innerHTML = "";
+      data.forEach((p, i) => {
+        const item = document.createElement("div");
+        item.innerHTML = `<span style="background:${colors[i % colors.length]}"></span>${p.name}`;
+        legend.appendChild(item);
+      });
+    })();
+  </script>
 </body>
 </html>

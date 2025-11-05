@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width" />
   <link rel="stylesheet" href="styles.css" />
   <title>Profile Dashboard</title>
-  
 </head>
 
 <body>
@@ -18,31 +17,40 @@
   </header>
 
   <main class="dashboard">
+    <!-- Profile Info -->
     <section class="info-section">
       <h2>Profile Info</h2>
       <p><strong>Email:</strong> <span id="user-email"></span></p>
       <p><strong>Total XP:</strong> <span id="total-xp"></span> XP</p>
     </section>
 
+    <!-- XP Composition -->
     <section class="stats-section">
       <h2>XP Composition</h2>
-      <div id="xp-donut"></div>
+      <div class="chart-wrapper">
+        <svg id="xp-donut" width="300" height="300"></svg>
+      </div>
     </section>
 
+    <!-- Audit Performance -->
     <section class="stats-section">
       <h2>Audit Performance</h2>
-      <div id="audit-pie"></div>
+      <div class="chart-wrapper">
+        <svg id="audit-pie" width="300" height="300"></svg>
+      </div>
       <div id="audit-stats"></div>
     </section>
 
+    <!-- XP by Project -->
     <section class="stats-section">
       <h2>XP by Project</h2>
-      <div id="xp-bar"></div>
+      <div class="chart-wrapper">
+        <svg id="xp-bar" width="600" height="300"></svg>
+      </div>
     </section>
   </main>
 
   <script src="main.js"></script>
   <script src="profile.js"></script>
 </body>
-
 </html>

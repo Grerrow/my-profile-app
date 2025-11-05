@@ -1,42 +1,6 @@
 const proxyurl = 'https://my-profile-app-7zjs.onrender.com/proxy?url=';
 
-async function loginUser(event) {
-    event.preventDefault();
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value.trim();
 
-    const credentials = btoa(`${email}:${password}`);
-
-    try {
-        const response = await fetch(`${proxyurl}${encodeURIComponent('https://platform.zone01.gr/api/auth/signin')}`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Basic ${credentials}`,
-            },
-        });
-
-        const text = (await response.text()).trim();
-        console.log('🔐 Raw login response:', text);
-
-        if (response.ok && text && text.length > 20) {
-            // 🟢 FIX: Remove potential wrapping quotes from the token
-            const cleanToken = text.replace(/^"|"$/g, '');
-
-            // 🟢 FIX: Save cleaned token
-            localStorage.setItem('token', cleanToken);
-
-            console.log('✅ Stored clean token:', cleanToken);
-            alert('✅ Login successful!');
-            await initDashboard();
-            window.location.href = 'profile.html';
-        } else {
-            alert('❌ Login failed: ' + (text || response.statusText));
-        }
-    } catch (err) {
-        console.error('Login error:', err);
-        alert('Network or server error');
-    }
-}
 
 ///jwt
 function decodeJWT(token) {
@@ -56,19 +20,13 @@ function isTokenValid(token) {
     }
 }
 
-const form = document.getElementById("login-form");
-if (form) form.addEventListener("submit", loginUser);
-
-// 🟢 FIX: Ensure token from localStorage is cleaned from quotes
 let token = localStorage.getItem('token');
-if (token) token = token.replace(/^"|"$/g, '');
 if (!isTokenValid(token)) localStorage.removeItem('token');
 
 // ---------------------------
 async function fetchUserData() {
     let token = localStorage.getItem('token');
     if (!token) return;
-    token = token.replace(/^"|"$/g, ''); // 🟢 FIX: clean token again just in case
     if (!isTokenValid(token)) return;
 
     const payload = decodeJWT(token);
@@ -76,7 +34,7 @@ async function fetchUserData() {
 
     const query = `
     {
-      user (where: {id:{_eq: ${userId}}}){
+      user {
         login
         firstName
         lastName
@@ -112,7 +70,7 @@ async function fetchUserData() {
 async function fetchXpData(whereClause, storageKey) {
     let token = localStorage.getItem('token');
     if (!token) return;
-    token = token.replace(/^"|"$/g, ''); // 🟢 FIX: clean token
+    // token = token.replace(/^"|"$/g, ''); // 🟢 FIX: clean token
     if (!isTokenValid(token)) return;
 
     const query = `
@@ -215,7 +173,7 @@ function calculateTotalXP() {
 async function auditRatio() {
     let token = localStorage.getItem('token');
     if (!token) return;
-    token = token.replace(/^"|"$/g, ''); // 🟢 Clean token again just in case
+    // token = token.replace(/^"|"$/g, ''); // 🟢 Clean token again just in case
     if (!isTokenValid(token)) return;
 
 
@@ -223,13 +181,22 @@ async function auditRatio() {
     const userId = Number(payload.sub);
 
     const query = `
+    query 
     {
-      user(where: {id:{_eq: ${userId}}}){
-    auditRatio
-    totalUp
-    totalDown
-  }
-    }`;
+        user(where: { id: { _eq: ${userId} } }) {
+            auditRatio
+            totalUp
+            totalDown
+            totalUpBonus
+            audits(where: { grade: { _is_null: false } }) {
+              grade
+              auditor {
+                id
+          }
+            }
+          }
+        }
+          `;
 
     try {
         const response = await fetch(`${proxyurl}${encodeURIComponent('https://platform.zone01.gr/api/graphql-engine/v1/graphql')}`, {
@@ -243,10 +210,12 @@ async function auditRatio() {
 
         const result = await response.json();
         if (response.ok && result.data && result.data.user.length > 0) {
-            const ratio = result.data.user[0].auditRatio; // 🟢 Access via [0]
-            localStorage.setItem('auditRatio', result.data.user[0].auditRatio);
-            localStorage.setItem('auditDone', result.data.user[0].totalUp);
-            localStorage.setItem('auditReceived', result.data.user[0].totalDown);
+            const ratio = result.data.user.auditRatio; 
+            localStorage.setItem('auditRatio', result.data.user.auditRatio);
+            localStorage.setItem('auditDone', result.data.user.totalUp);
+            localStorage.setItem('auditReceived', result.data.user.totalDown);
+            localStorage.setItem('auditUpBonus', result.data.user.totalUpBonus);
+            localStorage.setItem('auditRecords', JSON.stringify(result.data.user.audits));
             console.log('Audit ratio fetched:', ratio);
         } else {
             console.error('GraphQL error:', result.errors);
@@ -264,5 +233,4 @@ async function initDashboard() {
     await fetchJSPiscineXPData();
     await auditRatio();
     calculateTotalXP();
-    // window.location.href = 'profile.html';
 }

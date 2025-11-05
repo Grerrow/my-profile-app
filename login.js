@@ -1,3 +1,8 @@
+const proxyurl = 'https://my-profile-app-7zjs.onrender.com/proxy?url=';
+
+
+
+
 async function loginUser(event) {
     event.preventDefault();
     const email = document.getElementById("email").value.trim();

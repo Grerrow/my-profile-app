@@ -84,6 +84,9 @@ body {
 /* profile css */
 /* === Profile / Dashboard styles (REPLACE previous profile CSS) === */
 
+/* -----------------------------
+   Base Styles
+----------------------------- */
 body {
   font-family: 'Inter', sans-serif;
   margin: 0;
@@ -113,7 +116,7 @@ body {
   margin-top: 4px;
 }
 
-/* Logout */
+/* Logout Button */
 .logout-btn {
   background-color: #d9534f;
   color: white;
@@ -134,12 +137,18 @@ body {
   padding: 0 20px 60px;
 }
 
-/* responsive */
-@media (max-width: 1100px) { .dashboard { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 720px) { .dashboard { grid-template-columns: 1fr; padding: 0 12px; } }
+/* Responsive Dashboard */
+@media (max-width: 1100px) { 
+  .dashboard { grid-template-columns: repeat(2, 1fr); } 
+}
+@media (max-width: 720px) { 
+  .dashboard { grid-template-columns: 1fr; padding: 0 12px; } 
+}
 
-/* cards */
-.card { border-radius: 12px; }
+/* Cards */
+.card { 
+  border-radius: 12px; 
+}
 .info-section, .stats-section, .card {
   background: linear-gradient(180deg, #141414, #0f0f0f);
   padding: 18px;
@@ -148,10 +157,13 @@ body {
   min-height: 220px;
 }
 
-/* headings */
-.info-section h2, .stats-section h2 { color: #6cd3e2; margin: 0 0 12px 0; }
+/* Section Headings */
+.info-section h2, .stats-section h2 { 
+  color: #6cd3e2; 
+  margin: 0 0 12px 0; 
+}
 
-/* chart wrapper */
+/* Chart Wrapper */
 .chart-wrapper {
   display: flex;
   align-items: center;
@@ -159,30 +171,121 @@ body {
   gap: 18px;
 }
 
-/* CHANGED: scroll wrapper for xp bar */
+/* -----------------------------
+   Horizontal XP Bar Chart
+----------------------------- */
 .chart-scroll {
   width: 100%;
-  max-height: 520px; /* will be adjusted by JS if needed */
-  overflow-y: auto;
-  padding-right: 8px;
+  height: 320px;          /* fixed height for bars */
+  overflow-x: auto;       /* horizontal scroll */
+  overflow-y: hidden;     /* prevent vertical scroll */
+  padding-bottom: 12px;
+  box-sizing: border-box;
+  background: transparent;
+  white-space: nowrap;    /* ensure bars stay in a single horizontal row */
 }
 
-/* legend & audit styles */
-.chart-legend { display:flex; flex-direction:column; gap:8px; color:#cbd6db; }
-.audit-stats { color: #bcd; margin-left: 12px; }
-#audit-stats p { margin: 6px 0; }
+/* SVG container for horizontal bars */
+#xp-bar {
+  display: inline-block;  /* allows scroll */
+  height: 100%;
+}
 
-/* audits list (CHANGED: styling to match audit card snippet) */
-.audits-list { margin-top: 8px; color: #c8d2d6; font-size: 14px; }
-.audit { padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.02); }
-.audit-card { display:flex; justify-content:space-between; align-items:center; gap:10px; }
-.audit-title { font-weight:700; color:#fff; }
-.audit-meta { color:#9aa7ae; display:flex; gap:10px; align-items:center; }
-.audit-grade.passed { color:#4CAF50; font-weight:700; }
+/* Each bar is drawn vertically; labels underneath */
+#xp-bar rect {
+  transition: opacity 0.2s, transform 0.2s;
+}
 
-/* xp-bar svg and small text */
-#xp-bar { width:100%; display:block; background: transparent; }
-svg text { font-family: 'Inter', sans-serif; font-weight:600; fill: #ddd; }
+#xp-bar rect:hover {
+  opacity: 0.85;
+  cursor: pointer;
+  stroke: #fff;
+  stroke-width: 1;
+}
 
-/* muted */
-.muted { color: #98a4a8; font-size: 0.9rem; }
+/* Project labels under bars */
+#xp-bar .project-label {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  fill: #ddd;
+  text-anchor: middle;
+}
+
+/* XP values on top of bars */
+#xp-bar .xp-value {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  fill: #fff;
+  text-anchor: middle;
+}
+
+/* -----------------------------
+   Legend & Audit Styles
+----------------------------- */
+.chart-legend { 
+  display:flex; 
+  flex-direction:column; 
+  gap:8px; 
+  color:#cbd6db; 
+}
+
+.audit-stats { 
+  color: #bcd; 
+  margin-left: 12px; 
+}
+
+#audit-stats p { 
+  margin: 6px 0; 
+}
+
+/* Audits List */
+.audits-list { 
+  margin-top: 8px; 
+  color: #c8d2d6; 
+  font-size: 14px; 
+}
+
+.audit { 
+  padding: 6px 0; 
+  border-bottom: 1px solid rgba(255,255,255,0.02); 
+}
+
+.audit-card { 
+  display:flex; 
+  justify-content:space-between; 
+  align-items:center; 
+  gap:10px; 
+}
+
+.audit-title { 
+  font-weight:700; 
+  color:#fff; 
+}
+
+.audit-meta { 
+  color:#9aa7ae; 
+  display:flex; 
+  gap:10px; 
+  align-items:center; 
+}
+
+.audit-grade.passed { 
+  color:#4CAF50; 
+  font-weight:700; 
+}
+
+/* -----------------------------
+   Misc
+----------------------------- */
+.muted { 
+  color: #98a4a8; 
+  font-size: 0.9rem; 
+}
+
+/* Responsive adjustments */
+@media (max-width: 720px) {
+  .chart-scroll { height: 280px; }
+  #xp-bar .project-label, #xp-bar .xp-value { font-size: 10px; }
+}

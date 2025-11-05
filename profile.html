@@ -50,14 +50,16 @@
       </div>
     </section>
 
-    <!-- XP by Project -->
-    <section class="card stats-section">
-      <h2>XP by Project</h2>
-      <!-- CHANGED: added a scroll wrapper so chart can grow vertically -->
-      <div class="chart-scroll">
-        <svg id="xp-bar" viewBox="0 0 700 420" width="100%"></svg>
-      </div>
-    </section>
+   <!-- XP by Project -->
+<section class="card stats-section">
+  <h2>XP by Project</h2>
+  <!-- Scroll wrapper for horizontal overflow -->
+  <div class="chart-scroll" style="width: 100%; overflow-x: auto;">
+    <!-- SVG width grows dynamically; height can be fixed -->
+    <svg id="xp-bar" height="320"></svg>
+  </div>
+</section>
+
   </main>
 
   <script src="main.js"></script>

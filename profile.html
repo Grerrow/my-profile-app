@@ -1,56 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width" />
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Profile Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
-
 <body>
   <header class="header">
     <div class="header-left">
       <h1 id="user-name">Loading...</h1>
-      <p id="user-login"></p>
+      <div id="user-login" class="muted">@loading</div>
     </div>
     <button id="logout" class="logout-btn">Logout</button>
   </header>
 
   <main class="dashboard">
-    <!-- Profile Info -->
-    <section class="info-section">
+    <section class="card info-section" id="profile-card">
       <h2>Profile Info</h2>
-      <p><strong>Email:</strong> <span id="user-email"></span></p>
-      <p><strong>Total XP:</strong> <span id="total-xp"></span> XP</p>
+      <div class="card-body">
+        <p><strong>Email:</strong> <span id="user-email">—</span></p>
+        <p><strong>Total XP:</strong> <span id="total-xp">0</span> XP</p>
+        <hr />
+        <div id="latest-audits">
+          <h3>Latest Audits</h3>
+          <div id="audits-list">No audits</div>
+        </div>
+      </div>
     </section>
 
-    <!-- XP Composition -->
-    <section class="stats-section">
+    <section class="card" id="xp-donut-card">
       <h2>XP Composition</h2>
-      <div class="chart-wrapper">
-        <svg id="xp-donut" width="300" height="300"></svg>
+      <div class="card-body chart-wrapper">
+        <svg id="xp-donut" viewBox="0 0 300 300" role="img" aria-label="XP composition donut"></svg>
       </div>
+      <div class="card-footer" id="xp-legend"></div>
     </section>
 
-    <!-- Audit Performance -->
-    <section class="stats-section">
+    <section class="card" id="audit-card">
       <h2>Audit Performance</h2>
-      <div class="chart-wrapper">
-        <svg id="audit-pie" width="300" height="300"></svg>
+      <div class="card-body chart-wrapper">
+        <svg id="audit-pie" viewBox="0 0 300 300" role="img" aria-label="Audit ratio donut"></svg>
+        <div id="audit-stats" class="audit-stats"></div>
       </div>
-      <div id="audit-stats"></div>
     </section>
 
-    <!-- XP by Project -->
-    <section class="stats-section">
+    <section class="card" id="projects-card" style="grid-column: 1 / -1;">
       <h2>XP by Project</h2>
-      <div class="chart-wrapper">
-        <svg id="xp-bar" width="600" height="300"></svg>
+      <div class="card-body">
+        <svg id="xp-bar" viewBox="0 0 900 340" preserveAspectRatio="xMidYMid meet"></svg>
       </div>
     </section>
   </main>
 
-  <script src="main.js"></script>
+  <script src="main.js"></script> <!-- your existing fetching/auth logic -->
   <script src="profile.js"></script>
 </body>
 </html>

@@ -250,12 +250,12 @@ async function auditRatio() {
 
         const result = await response.json();
         if (response.ok && result.data && result.data.user.length > 0) {
-            const ratio = result.data.user.auditRatio; 
-            localStorage.setItem('auditRatio', result.data.user.auditRatio);
-            localStorage.setItem('auditDone', result.data.user.totalUp);
-            localStorage.setItem('auditReceived', result.data.user.totalDown);
-            localStorage.setItem('auditUpBonus', result.data.user.totalUpBonus);
-            localStorage.setItem('auditRecords', JSON.stringify(result.data.user.audits));
+            const ratio = result.data.user[0].auditRatio; 
+            localStorage.setItem('auditRatio', ratio);
+            localStorage.setItem('auditDone', result.data.user[0].totalUp);
+            localStorage.setItem('auditReceived', result.data.user[0].totalDown);
+            localStorage.setItem('auditUpBonus', result.data.user[0].totalUpBonus);
+            localStorage.setItem('auditRecords', JSON.stringify(result.data.user[0].audits));
             console.log('Audit ratio fetched:', ratio);
         } else {
             console.error('GraphQL error:', result.errors);

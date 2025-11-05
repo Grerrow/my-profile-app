@@ -1,213 +1,303 @@
-// --- Load user info ---
-const userData = JSON.parse(localStorage.getItem('userData') || '[]');
-if (userData.length > 0) {
-  const user = userData[0];
-  document.title = `Profile - ${user.login}`;
-  document.getElementById('user-name').textContent = `${user.firstName} ${user.lastName}`;
-  document.getElementById('user-login').textContent = `@${user.login}`;
-  document.getElementById('user-email').textContent = user.email || 'N/A';
+// profile.js
+// Reads the data produced by your main.js (localStorage) and draws charts
+
+// Safe getters and helpers
+const ls = k => {
+  try { return JSON.parse(localStorage.getItem(k) || 'null'); }
+  catch { return null; }
+};
+const lsRaw = k => localStorage.getItem(k);
+
+// Colors palette (distinct & professional)
+const COLORS = {
+  projects: '#4CAF50',
+  checkpoints: '#FFB74D',
+  piscine: '#29B6F6',
+  bonus: '#8E24AA',
+  done: '#4CAF50',
+  received: '#EF5350'
+};
+
+function formatK(n) {
+  if (!isFinite(n)) return '0';
+  if (Math.abs(n) >= 1000) return `${(n/1000).toFixed(0)}k`;
+  return `${Math.round(n)}`;
 }
 
-// --- XP Totals ---
-const totals = JSON.parse(localStorage.getItem('totalXPStats')) || {};
+// ---- Load user info ----
+const userData = ls('userData') || [];
+if (userData && userData.length > 0) {
+  const u = userData[0];
+  document.title = `Profile - ${u.login || ''}`;
+  document.getElementById('user-name').textContent = `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.login || 'Profile';
+  document.getElementById('user-login').textContent = `@${u.login || ''}`;
+  document.getElementById('user-email').textContent = u.email || 'N/A';
+}
+
+// totals
+const totals = ls('totalXPStats') || { projects:0, checkpoints:0, piscineJs:0, total:0, bonus:0 };
 document.getElementById('total-xp').textContent = (totals.total || 0).toLocaleString();
 
-// --- Logout ---
-document.getElementById('logout').addEventListener('click', () => {
-  localStorage.clear();
-  window.location.href = 'index.html';
-});
+// Latest audits (render from auditRecords if present)
+function renderLatestAudits() {
+  const audits = ls('auditRecords') || [];
+  const container = document.getElementById('audits-list');
+  if (!audits.length) {
+    container.innerHTML = '<div class="muted">No audit records available</div>';
+    return;
+  }
+  // show up to 8 latest
+  const list = audits.slice(0,8).map(a => {
+    const grade = typeof a.grade === 'number' ? a.grade : '—';
+    const auditor = a.auditor?.id ? `auditor #${a.auditor.id}` : '';
+    return `<div class="audit-row"><div class="audit-grade">${grade}</div><div class="audit-meta">${auditor}</div></div>`;
+  }).join('');
+  container.innerHTML = list;
+}
 
-//
-// === XP Composition Donut ===
-//
-function drawXPDonut() {
-  const data = [
-    { label: 'Projects', value: totals.projects || 0, color: '#4CAF50' },
-    { label: 'Checkpoints', value: totals.checkpoints || 0, color: '#FF9800' },
-    { label: 'Piscine', value: totals.piscineJs || 0, color: '#2196F3' },
-    { label: 'Bonuses', value: totals.bonus || 0, color: '#9C27B0' },
-  ].filter(d => d.value > 0);
-
+// ---- XP Donut ----
+function drawXpDonut() {
   const svg = document.getElementById('xp-donut');
-  svg.innerHTML = '';
-  const size = 300;
-  const radius = 100;
-  const cx = size / 2;
-  const cy = size / 2;
-  const total = data.reduce((sum, d) => sum + d.value, 0);
+  svg.innerHTML = ''; // clear
 
-  let startAngle = 0;
-  data.forEach(d => {
-    const angle = (d.value / total) * 2 * Math.PI;
-    const x1 = cx + radius * Math.cos(startAngle);
-    const y1 = cy + radius * Math.sin(startAngle);
-    const x2 = cx + radius * Math.cos(startAngle + angle);
-    const y2 = cy + radius * Math.sin(startAngle + angle);
-    const largeArc = angle > Math.PI ? 1 : 0;
+  // Build parts including detecting bonus in totals (fallback)
+  const parts = [
+    { key:'projects', label:'Projects', value: totals.projects || 0, color: COLORS.projects },
+    { key:'checkpoints', label:'Checkpoints', value: totals.checkpoints || 0, color: COLORS.checkpoints },
+    { key:'piscine', label:'Piscine + Bonus', value: totals.piscineJs || 0, color: COLORS.piscine }
+  ];
 
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', `M${cx},${cy} L${x1},${y1} A${radius},${radius} 0 ${largeArc} 1 ${x2},${y2} Z`);
-    path.setAttribute('fill', d.color);
-    svg.appendChild(path);
+  // If you stored a bonus amount separately (auditUpBonus), include it
+  const bonusVal = Number(lsRaw('auditUpBonus') || 0);
+  if (bonusVal > 0) {
+    parts.push({ key:'bonus', label:'Bonus', value: bonusVal, color: COLORS.bonus });
+  }
 
-    // Label mid-angle
-    const midAngle = startAngle + angle / 2;
-    const lx = cx + (radius + 40) * Math.cos(midAngle);
-    const ly = cy + (radius + 40) * Math.sin(midAngle);
-    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    label.setAttribute('x', lx);
-    label.setAttribute('y', ly);
-    label.setAttribute('text-anchor', 'middle');
-    label.setAttribute('font-size', '14');
-    label.setAttribute('fill', '#333');
-    label.textContent = d.label;
-    svg.appendChild(label);
+  const total = parts.reduce((s,p) => s + (p.value || 0), 0) || 1;
 
-    startAngle += angle;
+  // donut base circle for background ring
+  const cx = 150, cy = 150, r = 70;
+  const circ = 2 * Math.PI * r;
+  let offset = 0;
+
+  parts.forEach(p => {
+    if ((p.value || 0) <= 0) return;
+    const pct = p.value / total;
+    const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('r', String(r));
+    circle.setAttribute('cx', String(cx));
+    circle.setAttribute('cy', String(cy));
+    circle.setAttribute('fill','none');
+    circle.setAttribute('stroke', p.color);
+    circle.setAttribute('stroke-width', '40');
+    circle.setAttribute('stroke-dasharray', `${(pct * circ).toFixed(4)} ${((1-pct)*circ).toFixed(4)}`);
+    circle.setAttribute('stroke-dashoffset', String(-offset));
+    circle.setAttribute('stroke-linecap','butt');
+    circle.style.transition = 'stroke-dasharray .6s ease, stroke-dashoffset .6s ease';
+    circle.appendChild(document.createElement('title')).textContent = `${p.label}: ${(p.value).toLocaleString()} XP`;
+    svg.appendChild(circle);
+    offset += pct * circ;
+  });
+
+  // center text
+  const center = document.createElementNS('http://www.w3.org/2000/svg','text');
+  center.setAttribute('x', String(cx));
+  center.setAttribute('y', String(cy+6));
+  center.setAttribute('text-anchor','middle');
+  center.setAttribute('font-size','18');
+  center.setAttribute('fill','#e6e6e6');
+  center.setAttribute('font-weight','700');
+  center.textContent = `${(total).toLocaleString()} XP`;
+  svg.appendChild(center);
+
+  // legend
+  const legend = document.getElementById('xp-legend');
+  legend.innerHTML = '';
+  parts.forEach(p => {
+    if ((p.value||0) <= 0) return;
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    item.innerHTML = `<span class="legend-swatch" style="background:${p.color}"></span>
+                      <span class="legend-label">${p.label}</span>
+                      <span class="legend-value">${(p.value).toLocaleString()} XP</span>`;
+    legend.appendChild(item);
   });
 }
 
-//
-// === Audit Ratio Pie (Professional Look) ===
-//
+// ---- XP by Project bar chart ----
+function drawProjectBarChart() {
+  const txs = ls('userXPData') || [];
+  const agg = {};
+  txs.forEach(t => {
+    const name = (t.object && t.object.name) ? t.object.name : (t.path || 'unknown');
+    agg[name] = (agg[name] || 0) + (t.amount || 0);
+  });
+
+  const arr = Object.entries(agg).map(([name, xp]) => ({ name, xp })).sort((a,b) => b.xp - a.xp);
+  const top = arr.slice(0, Math.min(arr.length, 12)); // top 12
+  const svg = document.getElementById('xp-bar');
+  svg.innerHTML = '';
+
+  // sizing
+  const W = 900, H = 340, padding = 60;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+  if (!top.length) {
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x', W/2); t.setAttribute('y', H/2); t.setAttribute('text-anchor','middle');
+    t.setAttribute('fill','#999'); t.textContent = 'No project XP data';
+    svg.appendChild(t);
+    return;
+  }
+
+  const max = Math.max(...top.map(d=>d.xp));
+  const chartW = W - padding*2;
+  const barGap = 10;
+  const barWidth = Math.max(14, (chartW - (top.length-1)*barGap) / top.length);
+
+  // y axis ticks
+  const ticks = 4;
+  for (let i=0;i<=ticks;i++){
+    const val = Math.round(max * (i/ticks));
+    const y = H - padding - ( (val / max) * (H - padding*2) );
+    // grid line
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', padding); line.setAttribute('x2', W - padding);
+    line.setAttribute('y1', String(y)); line.setAttribute('y2', String(y));
+    line.setAttribute('stroke','#222'); line.setAttribute('stroke-width','1');
+    svg.appendChild(line);
+    // label
+    const lbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+    lbl.setAttribute('x', padding - 10); lbl.setAttribute('y', String(y + 4));
+    lbl.setAttribute('text-anchor','end'); lbl.setAttribute('font-size','12'); lbl.setAttribute('fill','#ccc');
+    lbl.textContent = `${Math.round(val/1000)}k`;
+    svg.appendChild(lbl);
+  }
+
+  top.forEach((d,i) => {
+    const x = padding + i * (barWidth + barGap);
+    const h = (d.xp / max) * (H - padding*2);
+    const y = H - padding - h;
+
+    const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    rect.setAttribute('x', String(x));
+    rect.setAttribute('y', String(y));
+    rect.setAttribute('width', String(barWidth));
+    rect.setAttribute('height', String(h));
+    rect.setAttribute('rx','4');
+    rect.setAttribute('fill', `hsl(${(i*45)%360} 75% 55%)`);
+    rect.style.transition = 'transform .2s ease, opacity .2s ease';
+    svg.appendChild(rect);
+
+    // value label above
+    const v = document.createElementNS('http://www.w3.org/2000/svg','text');
+    v.setAttribute('x', String(x + barWidth/2));
+    v.setAttribute('y', String(y - 8));
+    v.setAttribute('text-anchor','middle');
+    v.setAttribute('font-size','12');
+    v.setAttribute('fill','#fff');
+    v.textContent = formatK(d.xp);
+    svg.appendChild(v);
+
+    // name label rotated slightly
+    const name = document.createElementNS('http://www.w3.org/2000/svg','text');
+    name.setAttribute('x', String(x + barWidth/2));
+    name.setAttribute('y', String(H - padding + 20));
+    name.setAttribute('text-anchor','middle');
+    name.setAttribute('font-size','11');
+    name.setAttribute('fill','#ddd');
+    name.setAttribute('transform', `rotate(-20 ${x + barWidth/2} ${H - padding + 20})`);
+    name.textContent = d.name.length > 18 ? d.name.slice(0,17) + '…' : d.name;
+    svg.appendChild(name);
+
+    // hover effect
+    rect.addEventListener('mouseenter', () => {
+      rect.style.transform = 'translateY(-6px)';
+    });
+    rect.addEventListener('mouseleave', () => {
+      rect.style.transform = '';
+    });
+  });
+}
+
+// ---- Audit pie with labels and safety checks ----
 function drawAuditPie() {
-  const done = parseFloat(localStorage.getItem('auditDone') || 0);
-  const received = parseFloat(localStorage.getItem('auditReceived') || 0);
-  const ratio = parseFloat(localStorage.getItem('auditRatio') || 0);
-  const total = done + received;
+  const done = Number(lsRaw('auditDone') || 0);
+  const received = Number(lsRaw('auditReceived') || 0);
+  const ratio = Number(lsRaw('auditRatio') || 0);
 
   const svg = document.getElementById('audit-pie');
   svg.innerHTML = '';
-  if (total === 0) return;
+  if (done === 0 && received === 0) {
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x','150'); t.setAttribute('y','170'); t.setAttribute('text-anchor','middle');
+    t.setAttribute('fill','#999'); t.textContent = 'No audit data';
+    svg.appendChild(t);
+    document.getElementById('audit-stats').innerHTML = `<p>Done: 0 MB</p><p>Received: 0 MB</p>`;
+    return;
+  }
 
   const cx = 150, cy = 150, r = 100;
+  const total = done + received;
   const doneAngle = (done / total) * 2 * Math.PI;
 
-  // Done slice
+  // done slice
   const x1 = cx + r * Math.cos(0);
   const y1 = cy + r * Math.sin(0);
   const x2 = cx + r * Math.cos(doneAngle);
   const y2 = cy + r * Math.sin(doneAngle);
-  const largeArcFlag = done > received ? 1 : 0;
+  const largeArcFlag = (done / total) > 0.5 ? 1 : 0;
 
-  const pathDone = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  const pathDone = document.createElementNS('http://www.w3.org/2000/svg','path');
   pathDone.setAttribute('d', `M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${largeArcFlag},1 ${x2},${y2} Z`);
-  pathDone.setAttribute('fill', '#4CAF50');
+  pathDone.setAttribute('fill', COLORS.done);
   svg.appendChild(pathDone);
 
-  // Received slice
-  const pathReceived = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  pathReceived.setAttribute('d', `M${cx},${cy} L${x2},${y2} A${r},${r} 0 ${largeArcFlag ? 0 : 1},1 ${x1},${y1} Z`);
-  pathReceived.setAttribute('fill', '#F44336');
-  svg.appendChild(pathReceived);
+  const pathRec = document.createElementNS('http://www.w3.org/2000/svg','path');
+  pathRec.setAttribute('d', `M${cx},${cy} L${x2},${y2} A${r},${r} 0 ${largeArcFlag?0:1},1 ${x1},${y1} Z`);
+  pathRec.setAttribute('fill', COLORS.received);
+  svg.appendChild(pathRec);
 
-  // Labels
-  const doneMid = doneAngle / 2;
-  const recMid = doneAngle + (2 * Math.PI - doneAngle) / 2;
+  // labels inside slices
+  const doneMidAngle = doneAngle/2;
+  const recMidAngle = doneAngle + (2*Math.PI - doneAngle)/2;
 
-  const makeLabel = (text, angle, color) => {
-    const tx = cx + (r * 0.6) * Math.cos(angle);
-    const ty = cy + (r * 0.6) * Math.sin(angle);
-    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    t.setAttribute('x', tx);
-    t.setAttribute('y', ty);
-    t.setAttribute('text-anchor', 'middle');
-    t.setAttribute('dominant-baseline', 'middle');
-    t.setAttribute('font-size', '14');
-    t.setAttribute('font-weight', 'bold');
-    t.setAttribute('fill', '#fff');
-    t.textContent = text;
-    svg.appendChild(t);
-  };
-  makeLabel('Done', doneMid, '#4CAF50');
-  makeLabel('Received', recMid, '#F44336');
+  const doneText = document.createElementNS('http://www.w3.org/2000/svg','text');
+  doneText.setAttribute('x', String(cx + (r*0.55)*Math.cos(doneMidAngle)));
+  doneText.setAttribute('y', String(cy + (r*0.55)*Math.sin(doneMidAngle)));
+  doneText.setAttribute('text-anchor','middle');
+  doneText.setAttribute('fill','#fff');
+  doneText.setAttribute('font-size','13');
+  doneText.setAttribute('font-weight','700');
+  doneText.textContent = formatK(done);
+  svg.appendChild(doneText);
 
-  // Center text (ratio)
-  const ratioText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-  ratioText.setAttribute('x', cx);
-  ratioText.setAttribute('y', cy);
-  ratioText.setAttribute('text-anchor', 'middle');
-  ratioText.setAttribute('dominant-baseline', 'middle');
-  ratioText.setAttribute('font-size', '20');
-  ratioText.setAttribute('font-weight', 'bold');
-  ratioText.setAttribute('fill', '#333');
-  ratioText.textContent = `Ratio ${ratio.toFixed(2)}`;
+  const recText = document.createElementNS('http://www.w3.org/2000/svg','text');
+  recText.setAttribute('x', String(cx + (r*0.55)*Math.cos(recMidAngle)));
+  recText.setAttribute('y', String(cy + (r*0.55)*Math.sin(recMidAngle)));
+  recText.setAttribute('text-anchor','middle');
+  recText.setAttribute('fill','#fff');
+  recText.setAttribute('font-size','13');
+  recText.setAttribute('font-weight','700');
+  recText.textContent = formatK(received);
+  svg.appendChild(recText);
+
+  // center ratio
+  const ratioText = document.createElementNS('http://www.w3.org/2000/svg','text');
+  ratioText.setAttribute('x', String(cx));
+  ratioText.setAttribute('y', String(cy));
+  ratioText.setAttribute('text-anchor','middle');
+  ratioText.setAttribute('fill','#fff');
+  ratioText.setAttribute('font-size','14');
+  ratioText.setAttribute('font-weight','700');
+  ratioText.textContent = `Ratio ${(isFinite(ratio) ? ratio.toFixed(2) : '—')}`;
   svg.appendChild(ratioText);
 
-  document.getElementById('audit-stats').innerHTML = `
-    <p>Done: ${(done / 1000000).toFixed(2)} MB</p>
-    <p>Received: ${(received / 1000000).toFixed(2)} MB</p>
-  `;
+  document.getElementById('audit-stats').innerHTML = `<p>Done: ${(done/1000000).toFixed(2)} MB</p><p>Received: ${(received/1000000).toFixed(2)} MB</p>`;
 }
 
-//
-// === XP by Project Bar Chart ===
-//
-function drawXPByProject() {
-  const userXPData = JSON.parse(localStorage.getItem('userXPData') || '[]');
-
-  const projectXP = {};
-  userXPData.forEach(entry => {
-    const name = entry.object?.name || 'Unknown';
-    projectXP[name] = (projectXP[name] || 0) + entry.amount;
-  });
-
-  const projects = Object.entries(projectXP)
-    .map(([name, xp]) => ({ name, xp }))
-    .sort((a, b) => b.xp - a.xp)
-    .slice(0, 12);
-
-  const svg = document.getElementById('xp-bar');
-  svg.innerHTML = '';
-
-  const width = 600, height = 300, padding = 40;
-  const barWidth = (width - padding * 2) / projects.length - 10;
-  const maxXP = Math.max(...projects.map(p => p.xp));
-
-  projects.forEach((p, i) => {
-    const x = padding + i * (barWidth + 10);
-    const barHeight = (p.xp / maxXP) * (height - 100);
-    const y = height - barHeight - padding;
-
-    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    rect.setAttribute('x', x);
-    rect.setAttribute('y', y);
-    rect.setAttribute('width', barWidth);
-    rect.setAttribute('height', barHeight);
-    rect.setAttribute('fill', `hsl(${(i * 40) % 360}, 70%, 55%)`);
-    svg.appendChild(rect);
-
-    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    label.setAttribute('x', x + barWidth / 2);
-    label.setAttribute('y', height - padding / 2);
-    label.setAttribute('text-anchor', 'middle');
-    label.setAttribute('font-size', '10');
-    label.textContent = p.name;
-    svg.appendChild(label);
-
-    const value = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    value.setAttribute('x', x + barWidth / 2);
-    value.setAttribute('y', y - 5);
-    value.setAttribute('text-anchor', 'middle');
-    value.setAttribute('font-size', '11');
-    value.setAttribute('fill', '#333');
-    value.textContent = `${(p.xp / 1000).toFixed(0)} KB`;
-    svg.appendChild(value);
-  });
-
-  // X-axis line
-  const axis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-  axis.setAttribute('x1', padding - 10);
-  axis.setAttribute('y1', height - padding);
-  axis.setAttribute('x2', width - padding + 10);
-  axis.setAttribute('y2', height - padding);
-  axis.setAttribute('stroke', '#aaa');
-  axis.setAttribute('stroke-width', '2');
-  svg.appendChild(axis);
-}
-
-// --- Draw charts ---
-drawXPDonut();
+// ---- bootstrap draws ----
+renderLatestAudits();
+drawXpDonut();
+drawProjectBarChart();
 drawAuditPie();
-drawXPByProject();

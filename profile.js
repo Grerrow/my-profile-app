@@ -286,27 +286,27 @@ function drawXPByProject() {
   // Aggregate XP by project
   const agg = {};
   userXPData.forEach(tx => {
-    const rawName = (tx.object?.name) ? String(tx.object.name) : (tx.path || 'unknown');
-    agg[rawName] = (agg[rawName] || 0) + (tx.amount || 0);
+    const name = tx.object?.name || tx.path || 'Unknown';
+    agg[name] = (agg[name] || 0) + (tx.amount || 0);
   });
 
-  const arr = Object.entries(agg).map(([name, xp]) => ({ name, xp }));
-  arr.sort((a,b) => b.xp - a.xp); // sort descending by XP
-  const projects = arr;
+  const projects = Object.entries(agg)
+    .map(([name, xp]) => ({ name, xp }))
+    .sort((a, b) => b.xp - a.xp);
 
   const svg = document.getElementById('xp-bar');
   svg.innerHTML = '';
 
-  const height = 300; // fixed chart height
-  const padding = { t: 40, r: 40, b: 40, l: 160 };
+  const padding = { t: 40, r: 20, b: 40, l: 160 };
   const gap = 10;
-  const minBarW = 40;
-  const maxBarW = 80;
+  const minBarH = 24;
+  const maxBarH = 48;
   const n = Math.max(1, projects.length);
 
-  const barW = Math.max(minBarW, Math.min(maxBarW, Math.floor((height - padding.t - padding.b - gap*(n-1)) / n)));
-  const chartH = padding.t + padding.b + n * (barW + gap);
-  const chartW = Math.max(700, projects.reduce((sum, d) => sum + d.xp, 0) * 0.1); // dynamic width
+  // compute bar height
+  const barH = Math.max(minBarH, Math.min(maxBarH, Math.floor((400 - padding.t - padding.b - gap * (n-1)) / n)));
+  const chartH = padding.t + padding.b + n * (barH + gap);
+  const chartW = 800; // fixed width for X-axis
 
   svg.setAttribute('viewBox', `0 0 ${chartW} ${chartH}`);
   svg.setAttribute('height', chartH);
@@ -323,43 +323,42 @@ function drawXPByProject() {
   }
 
   const maxXP = Math.max(...projects.map(d => d.xp), 1);
-  const barHeight = barW;
+  const chartWidth = chartW - padding.l - padding.r;
 
-  // draw bars horizontally
+  // Draw bars horizontally
   projects.forEach((d, i) => {
-    const y = padding.t + i * (barHeight + gap);
+    const y = padding.t + i * (barH + gap);
     const x = padding.l;
-    const w = (d.xp / maxXP) * (chartW - padding.l - padding.r);
+    const w = (d.xp / maxXP) * chartWidth;
 
+    // bar rectangle
     const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
     rect.setAttribute('x', x);
     rect.setAttribute('y', y);
     rect.setAttribute('width', w);
-    rect.setAttribute('height', barHeight);
+    rect.setAttribute('height', barH);
     rect.setAttribute('rx', 6);
     rect.setAttribute('fill', `hsl(${(i * 42) % 360} 70% 50%)`);
     svg.appendChild(rect);
 
-    // XP label
+    // XP label at end of bar
     const xpLabel = document.createElementNS('http://www.w3.org/2000/svg','text');
     xpLabel.setAttribute('x', x + w + 8);
-    xpLabel.setAttribute('y', y + barHeight/2 + 4);
-    xpLabel.setAttribute('font-size','12');
-    xpLabel.setAttribute('fill','#fff');
+    xpLabel.setAttribute('y', y + barH/2 + 4);
+    xpLabel.setAttribute('class', 'xp-value');
     xpLabel.textContent = `${Math.round(d.xp/1000)}k`;
     svg.appendChild(xpLabel);
 
-    // Project name
-    const name = document.createElementNS('http://www.w3.org/2000/svg','text');
-    name.setAttribute('x', x - 12);
-    name.setAttribute('y', y + barHeight/2 + 4);
-    name.setAttribute('text-anchor','end');
-    name.setAttribute('font-size','12');
-    name.setAttribute('fill','#ddd');
+    // Project name on the left
+    const nameLabel = document.createElementNS('http://www.w3.org/2000/svg','text');
+    nameLabel.setAttribute('x', x - 12);
+    nameLabel.setAttribute('y', y + barH/2 + 4);
+    nameLabel.setAttribute('text-anchor','end');
+    nameLabel.setAttribute('class','project-label');
     let disp = d.name;
-    if (disp.length > 20) disp = disp.slice(0, 17) + '…';
-    name.textContent = disp;
-    svg.appendChild(name);
+    if(disp.length>20) disp = disp.slice(0,17)+'…';
+    nameLabel.textContent = disp;
+    svg.appendChild(nameLabel);
 
     // tooltip
     const title = document.createElementNS('http://www.w3.org/2000/svg','title');
@@ -367,7 +366,7 @@ function drawXPByProject() {
     rect.appendChild(title);
   });
 
-  // horizontal baseline
+  // Draw baseline for X-axis
   const xline = document.createElementNS('http://www.w3.org/2000/svg','line');
   xline.setAttribute('x1', padding.l);
   xline.setAttribute('y1', chartH - padding.b + 4);
@@ -376,14 +375,8 @@ function drawXPByProject() {
   xline.setAttribute('stroke', '#444');
   xline.setAttribute('stroke-width', '1');
   svg.appendChild(xline);
-
-  // scroll support for wide charts
-  const scrollWrap = document.querySelector('.chart-scroll');
-  if (scrollWrap) {
-    scrollWrap.style.width = '100%';
-    scrollWrap.style.overflowX = (chartW > scrollWrap.clientWidth ? 'auto' : 'hidden');
-  }
 }
+
 
 
 // -----------------------------

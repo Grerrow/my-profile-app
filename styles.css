@@ -174,24 +174,30 @@ body {
 /* -----------------------------
    Horizontal XP Bar Chart
 ----------------------------- */
+/* -----------------------------
+   Horizontal XP Bar Chart
+----------------------------- */
+
+/* Scroll wrapper for chart */
 .chart-scroll {
   width: 100%;
-  height: 320px;          /* fixed height for bars */
-  overflow-x: auto;       /* horizontal scroll */
-  overflow-y: hidden;     /* prevent vertical scroll */
-  padding-bottom: 12px;
+  height: auto;          /* allow height to grow if needed */
+  max-height: 600px;     /* prevent it from getting too tall */
+  overflow-x: auto;      /* horizontal scroll */
+  overflow-y: hidden;    /* no vertical scroll */
+  padding: 12px 0;
   box-sizing: border-box;
   background: transparent;
-  white-space: nowrap;    /* ensure bars stay in a single horizontal row */
 }
 
-/* SVG container for horizontal bars */
+/* SVG container */
 #xp-bar {
-  display: inline-block;  /* allows scroll */
+  display: block;       /* block so width can grow dynamically */
   height: 100%;
+  min-width: 800px;     /* ensures enough room for bars and XP labels */
 }
 
-/* Each bar is drawn vertically; labels underneath */
+/* Bars */
 #xp-bar rect {
   transition: opacity 0.2s, transform 0.2s;
 }
@@ -203,23 +209,30 @@ body {
   stroke-width: 1;
 }
 
-/* Project labels under bars */
+/* Project labels (Y-axis) */
 #xp-bar .project-label {
   font-family: 'Inter', sans-serif;
   font-weight: 600;
   font-size: 12px;
   fill: #ddd;
-  text-anchor: middle;
+  text-anchor: end;     /* aligns text to the left of bars */
 }
 
-/* XP values on top of bars */
+/* XP value labels at end of bars */
 #xp-bar .xp-value {
   font-family: 'Inter', sans-serif;
   font-weight: 600;
   font-size: 12px;
   fill: #fff;
-  text-anchor: middle;
+  text-anchor: start;   /* aligns text at the end of bar */
 }
+
+/* Responsive adjustments */
+@media (max-width: 720px) {
+  .chart-scroll { max-height: 400px; }
+  #xp-bar .project-label, #xp-bar .xp-value { font-size: 10px; }
+}
+
 
 /* -----------------------------
    Legend & Audit Styles

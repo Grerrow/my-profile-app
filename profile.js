@@ -4,7 +4,8 @@ const userData = JSON.parse(localStorage.getItem('userData') || '[]');
 if (userData.length > 0) {
   const user = userData[0];
   document.title = `Profile - ${user.login}`;
-  document.getElementById('user-name').textContent = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+ document.getElementById('first-name').textContent = user.firstName || 'N/A';
+  document.getElementById('last-name').textContent = user.lastName || 'N/A';
   document.getElementById('user-login').textContent = `@${user.login || ''}`;
   document.getElementById('user-email').textContent = user.email || 'N/A';
 }
@@ -82,8 +83,8 @@ function drawXPDonut() {
       const path = (tx.path || '').toLowerCase();
       const isCheckpoint = path.includes('/checkpoint') || path.includes('checkpoint');
       const isPiscine = path.includes('piscine-js') || (tx.object && tx.object.type === 'piscine');
-      const isBonus = bonusCandidates.includes(tx);
-      return !isCheckpoint && !isPiscine && !isBonus;
+      // const isBonus = bonusCandidates.includes(tx);
+      return !isCheckpoint && !isPiscine;
     })
     .reduce((s, t) => s + (t.amount || 0), 0);
 
@@ -94,7 +95,6 @@ function drawXPDonut() {
     { label: 'Projects', value: projectsTotal, color: '#4CAF50' },
     { label: 'Checkpoints', value: checkpointsTotal, color: '#FFB74D' },
     { label: 'Piscine', value: piscineTotal, color: '#42A5F5' },
-    { label: 'Bonus', value: bonusTotal, color: '#9C27B0' },
   ].filter(p => p.value > 0);
 
   const total = parts.reduce((s, p) => s + p.value, 0);

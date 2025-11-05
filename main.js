@@ -213,30 +213,35 @@ function calculateTotalXP() {
 async function auditRatio() {
     let token = localStorage.getItem('token');
     if (!token) return;
-    // token = token.replace(/^"|"$/g, ''); // 🟢 Clean token again just in case
     if (!isTokenValid(token)) return;
-
 
     const payload = decodeJWT(token);
     const userId = Number(payload.sub);
 
     const query = `
-    query 
-    {
+      query {
         user(where: { id: { _eq: ${userId} } }) {
-            auditRatio
-            totalUp
-            totalDown
-            totalUpBonus
-            audits(where: { grade: { _is_null: false } }) {
-              grade
-              auditor {
-                id
-          }
+          auditRatio
+          totalUp
+          totalDown
+          totalUpBonus
+          audits(
+            where: { grade: { _is_null: false } }
+            order_by: { createdAt: desc }
+            limit: 5
+          ) {
+            auditorId
+            auditedAt
+            grade
+            group {
+              object {
+                name
+              }
             }
           }
         }
-          `;
+      }
+    `;
 
     try {
         const response = await fetch(`${proxyurl}${encodeURIComponent('https://platform.zone01.gr/api/graphql-engine/v1/graphql')}`, {
@@ -249,21 +254,24 @@ async function auditRatio() {
         });
 
         const result = await response.json();
-        if (response.ok && result.data && result.data.user.length > 0) {
-            const ratio = result.data.user[0].auditRatio; 
-            localStorage.setItem('auditRatio', ratio);
-            localStorage.setItem('auditDone', result.data.user[0].totalUp);
-            localStorage.setItem('auditReceived', result.data.user[0].totalDown);
-            localStorage.setItem('auditUpBonus', result.data.user[0].totalUpBonus);
-            localStorage.setItem('auditRecords', JSON.stringify(result.data.user[0].audits));
-            console.log('Audit ratio fetched:', ratio);
+        if (response.ok && result.data?.user?.length) {
+            const userData = result.data.user[0];
+
+            localStorage.setItem('auditRatio', userData.auditRatio);
+            localStorage.setItem('auditDone', userData.totalUp);
+            localStorage.setItem('auditReceived', userData.totalDown);
+            localStorage.setItem('auditUpBonus', userData.totalUpBonus);
+            localStorage.setItem('auditRecords', JSON.stringify(userData.audits));
+
+            console.log('Audit ratio fetched:', userData.auditRatio);
         } else {
-            console.error('GraphQL error:', result.errors);
+            console.error('GraphQL error:', result.errors || 'No user data returned');
         }
     } catch (err) {
         console.error('Fetch audit ratio data error:', err);
     }
 }
+
 
 
 async function initDashboard() {

@@ -31,7 +31,7 @@ function formatBytesAsKBorMB(n) {
 // -----------------------------
 function renderLatestAuditsFromStorage() {
   const audits = JSON.parse(localStorage.getItem('auditRecords') || '[]');
-  const auditsContainer = document.getElementById('audits-list'); // CHANGED matches new id
+  const auditsContainer = document.getElementById('audits-list');
   auditsContainer.innerHTML = '';
 
   if (!audits || audits.length === 0) {
@@ -39,25 +39,31 @@ function renderLatestAuditsFromStorage() {
     return;
   }
 
-  // show up to 10 latest
-  audits.slice(0, 10).forEach(audit => {
+  // show up to 5 latest audits (matches your query limit)
+  audits.slice(0, 5).forEach(audit => {
     const auditElement = document.createElement('div');
     auditElement.classList.add('audit');
-    // CHANGED: using group.object.name, createdAt, grade style & passed class
-    const groupName = (audit.group && audit.group.object && audit.group.object.name) ? audit.group.object.name : (audit.object?.name || 'Unknown');
-    const dateStr = audit.createdAt ? new Date(audit.createdAt).toLocaleString() : '—';
-    const grade = (typeof audit.grade === 'number') ? audit.grade : '—';
+
+    // Extract group name safely
+    const groupName = audit.group?.object?.name || 'Unknown';
+
+    // Format the auditedAt date
+    const dateStr = audit.auditedAt ? new Date(audit.auditedAt).toLocaleString() : '—';
+
+    // Display grade, marking "Passed" if grade === 1
+    const gradeDisplay = audit.grade === 1 ? 'Passed' : (audit.grade ?? '—');
+    const gradeClass = audit.grade === 1 ? 'passed' : '';
+
     auditElement.innerHTML = `
       <div class="audit-card">
         <div class="audit-title">${groupName}</div>
         <div class="audit-meta">
           <span class="audit-date">${dateStr}</span>
-          <span class="audit-grade ${audit.grade === 1 ? 'passed' : ''}">
-            ${audit.grade === 1 ? 'Passed' : grade}
-          </span>
+          <span class="audit-grade ${gradeClass}">${gradeDisplay}</span>
         </div>
       </div>
     `;
+
     auditsContainer.appendChild(auditElement);
   });
 }
@@ -272,43 +278,42 @@ function drawAuditPie() {
 }
 
 // -----------------------------
-// XP by Project (CHANGED: show ALL projects, dynamic height, scroll wrapper support)
+// XP by Project Bar Chart
 // -----------------------------
 function drawXPByProject() {
   const userXPData = JSON.parse(localStorage.getItem('userXPData') || '[]');
 
+  // Aggregate XP by project
   const agg = {};
   userXPData.forEach(tx => {
-    const rawName = (tx.object && tx.object.name) ? String(tx.object.name) : (tx.path || 'unknown');
-    const name = rawName;
-    agg[name] = (agg[name] || 0) + (tx.amount || 0);
+    const rawName = (tx.object?.name) ? String(tx.object.name) : (tx.path || 'unknown');
+    agg[rawName] = (agg[rawName] || 0) + (tx.amount || 0);
   });
 
   const arr = Object.entries(agg).map(([name, xp]) => ({ name, xp }));
-  arr.sort((a,b) => b.xp - a.xp);
-  const projects = arr; // CHANGED: no top-N slicing, show all
+  arr.sort((a,b) => b.xp - a.xp); // sort descending by XP
+  const projects = arr;
 
   const svg = document.getElementById('xp-bar');
   svg.innerHTML = '';
 
-  const width = 700;
-  // compute bar size based on number of projects
-  const padding = { t: 40, r: 20, b: 40, l: 160 };
+  const height = 300; // fixed chart height
+  const padding = { t: 40, r: 40, b: 40, l: 160 };
   const gap = 10;
-  const minBarH = 16;
-  const maxBarH = 36;
+  const minBarW = 40;
+  const maxBarW = 80;
   const n = Math.max(1, projects.length);
-  // try to fit into a reasonable height, but allow growth
-  const preferredHeight = Math.max(420, n * (minBarH + gap) + padding.t + padding.b);
-  const barH = Math.max(minBarH, Math.min(maxBarH, Math.floor((preferredHeight - padding.t - padding.b - gap*(n-1)) / n)));
-  const chartH = padding.t + padding.b + n * (barH + gap);
 
-  svg.setAttribute('viewBox', `0 0 ${width} ${chartH}`);
+  const barW = Math.max(minBarW, Math.min(maxBarW, Math.floor((height - padding.t - padding.b - gap*(n-1)) / n)));
+  const chartH = padding.t + padding.b + n * (barW + gap);
+  const chartW = Math.max(700, projects.reduce((sum, d) => sum + d.xp, 0) * 0.1); // dynamic width
+
+  svg.setAttribute('viewBox', `0 0 ${chartW} ${chartH}`);
   svg.setAttribute('height', chartH);
 
   if (projects.length === 0) {
     const t = document.createElementNS('http://www.w3.org/2000/svg','text');
-    t.setAttribute('x', width/2);
+    t.setAttribute('x', chartW/2);
     t.setAttribute('y', chartH/2);
     t.setAttribute('text-anchor','middle');
     t.setAttribute('fill','#777');
@@ -318,63 +323,41 @@ function drawXPByProject() {
   }
 
   const maxXP = Math.max(...projects.map(d => d.xp), 1);
-  const chartW = width - padding.l - padding.r;
+  const barHeight = barW;
 
-  // X-axis ticks
-  const ticks = 4;
-  for (let i=0;i<=ticks;i++) {
-    const vx = padding.l + (chartW / ticks) * i;
-    const val = Math.round((maxXP / ticks) * i);
-    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
-    line.setAttribute('x1', vx);
-    line.setAttribute('x2', vx);
-    line.setAttribute('y1', padding.t);
-    line.setAttribute('y2', padding.t + (n*(barH+gap) - gap));
-    line.setAttribute('stroke', 'rgba(255,255,255,0.03)');
-    line.setAttribute('stroke-width', '1');
-    svg.appendChild(line);
-
-    const label = document.createElementNS('http://www.w3.org/2000/svg','text');
-    label.setAttribute('x', vx);
-    label.setAttribute('y', padding.t - 12);
-    label.setAttribute('text-anchor','middle');
-    label.setAttribute('font-size','11');
-    label.setAttribute('fill','#aaa');
-    label.textContent = `${Math.round(val/1000)}k`;
-    svg.appendChild(label);
-  }
-
-  // draw bars
+  // draw bars horizontally
   projects.forEach((d, i) => {
+    const y = padding.t + i * (barHeight + gap);
     const x = padding.l;
-    const y = padding.t + i * (barH + gap);
-    const w = (d.xp / maxXP) * chartW;
+    const w = (d.xp / maxXP) * (chartW - padding.l - padding.r);
 
     const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
     rect.setAttribute('x', x);
     rect.setAttribute('y', y);
     rect.setAttribute('width', w);
-    rect.setAttribute('height', barH);
+    rect.setAttribute('height', barHeight);
     rect.setAttribute('rx', 6);
     rect.setAttribute('fill', `hsl(${(i * 42) % 360} 70% 50%)`);
     svg.appendChild(rect);
 
-    const v = document.createElementNS('http://www.w3.org/2000/svg','text');
-    v.setAttribute('x', x + w + 10);
-    v.setAttribute('y', y + barH / 2 + 4);
-    v.setAttribute('font-size','12');
-    v.setAttribute('fill','#fff');
-    v.textContent = `${Math.round(d.xp/1000)}k`;
-    svg.appendChild(v);
+    // XP label
+    const xpLabel = document.createElementNS('http://www.w3.org/2000/svg','text');
+    xpLabel.setAttribute('x', x + w + 8);
+    xpLabel.setAttribute('y', y + barHeight/2 + 4);
+    xpLabel.setAttribute('font-size','12');
+    xpLabel.setAttribute('fill','#fff');
+    xpLabel.textContent = `${Math.round(d.xp/1000)}k`;
+    svg.appendChild(xpLabel);
 
+    // Project name
     const name = document.createElementNS('http://www.w3.org/2000/svg','text');
-    name.setAttribute('x', padding.l - 12);
-    name.setAttribute('y', y + barH / 2 + 4);
+    name.setAttribute('x', x - 12);
+    name.setAttribute('y', y + barHeight/2 + 4);
     name.setAttribute('text-anchor','end');
     name.setAttribute('font-size','12');
     name.setAttribute('fill','#ddd');
     let disp = d.name;
-    if (disp.length > 36) disp = disp.slice(0, 33) + '…';
+    if (disp.length > 20) disp = disp.slice(0, 17) + '…';
     name.textContent = disp;
     svg.appendChild(name);
 
@@ -384,23 +367,24 @@ function drawXPByProject() {
     rect.appendChild(title);
   });
 
-  // baseline
+  // horizontal baseline
   const xline = document.createElementNS('http://www.w3.org/2000/svg','line');
   xline.setAttribute('x1', padding.l);
-  xline.setAttribute('y1', padding.t + (n*(barH+gap) - gap) + 8);
-  xline.setAttribute('x2', padding.l + chartW);
-  xline.setAttribute('y2', padding.t + (n*(barH+gap) - gap) + 8);
+  xline.setAttribute('y1', chartH - padding.b + 4);
+  xline.setAttribute('x2', chartW - padding.r);
+  xline.setAttribute('y2', chartH - padding.b + 4);
   xline.setAttribute('stroke', '#444');
   xline.setAttribute('stroke-width', '1');
   svg.appendChild(xline);
 
-  // CHANGED: ensure container can scroll vertically when lots of items
+  // scroll support for wide charts
   const scrollWrap = document.querySelector('.chart-scroll');
   if (scrollWrap) {
-    scrollWrap.style.maxHeight = '520px';
-    scrollWrap.style.overflowY = (chartH > 520 ? 'auto' : 'hidden');
+    scrollWrap.style.width = '100%';
+    scrollWrap.style.overflowX = (chartW > scrollWrap.clientWidth ? 'auto' : 'hidden');
   }
 }
+
 
 // -----------------------------
 // Initialize all

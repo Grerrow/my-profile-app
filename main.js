@@ -75,13 +75,13 @@ async function fetchUserData() {
 }
 
 
-async function fetchXpData(query, storageKey) {
+async function fetchXpData(whereClause, storageKey) {
     let token = localStorage.getItem('token');
     if (!isTokenValid(token) || !token) return;
 
     const query = `
     query {
-        transaction(where: ${query}, order_by: { createdAt: desc }) {
+        transaction(where: ${whereClause}, order_by: { createdAt: desc }) {
             path
             amount
             createdAt
@@ -239,4 +239,3 @@ async function auditRatio() {
 
 
 
- 

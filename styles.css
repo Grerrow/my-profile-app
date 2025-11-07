@@ -28,6 +28,7 @@ body.has-dashboard {
   justify-content: initial;
   height: auto;
   min-height: 100vh;
+  background: #ffffff; /* CHANGED: ensure profile page background is white */
 }
 
 /* Login form container (global) */
@@ -98,7 +99,7 @@ body.has-dashboard {
 
 .dashboard-app {
   font-family: 'Inter', sans-serif;
-  background-color: #0f0f0f;
+  background-color: #ffffff;
   color: #e6eef1;
   min-height: 100vh;
   box-sizing: border-box;
@@ -134,7 +135,7 @@ body.has-dashboard {
 
 /* Make username at header larger */
 .dashboard-app .header-left #user-login {
-  font-size: 1.15rem;
+  font-size: 1.30rem;
   font-weight: 700;
   color: #ffffff;
 }

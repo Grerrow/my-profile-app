@@ -15,7 +15,6 @@ async function loginUser(event) {
                 'Content-Type': 'application/json',
                 'Accept': 'text/plain'
             },
-            // some auth endpoints expect an empty JSON body for POST — safe to send {}
             body: JSON.stringify({})
         });
 

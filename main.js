@@ -1,5 +1,15 @@
 export const proxyurl = 'https://my-profile-app-7zjs.onrender.com/proxy?url=';
 
+export async function initDashboard() {
+    await fetchUserData();
+    await fetchUserProjectsXPData();
+    await fetchUserCheckpointsXPData();
+    await fetchJSPiscineXPData();
+    await auditRatio();
+    calculateTotalXP();
+}
+
+
 ///jwt
 function decodeJWT(token) {
     const base64Url = token.split('.')[1];
@@ -229,11 +239,4 @@ async function auditRatio() {
 
 
 
- export async function initDashboard() {
-    await fetchUserData();
-    await fetchUserProjectsXPData();
-    await fetchUserCheckpointsXPData();
-    await fetchJSPiscineXPData();
-    await auditRatio();
-    calculateTotalXP();
-}
+ 

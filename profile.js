@@ -261,7 +261,8 @@ function drawAuditPie() {
   centerText.setAttribute('y', cy);
   centerText.setAttribute('text-anchor', 'middle');
   centerText.setAttribute('dominant-baseline', 'middle');
-  centerText.setAttribute('font-size', '16');
+  // CHANGED: make the ratio letters a bit smaller
+  centerText.setAttribute('font-size', '14');
   centerText.setAttribute('font-weight', '700');
   centerText.setAttribute('fill', '#fff');
   centerText.textContent = `Ratio ${ratio.toFixed(2)}`;
@@ -335,11 +336,15 @@ function drawXPByProject() {
   const maxXP = Math.max(...projects.map(d => d.xp), 1);
   const chartWidth = chartW - padding.l - padding.r;
 
+  // CHANGED: make content slightly "zoomed out" by applying a scale factor to bar widths
+  const contentScale = 0.88;
+
   // Draw bars horizontally
   projects.forEach((d, i) => {
     const y = padding.t + i * (barH + gap);
     const x = padding.l;
-    const w = (d.xp / maxXP) * chartWidth;
+    const rawW = (d.xp / maxXP) * chartWidth;
+    const w = rawW * contentScale;
 
     // bar rectangle
     const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
@@ -351,11 +356,12 @@ function drawXPByProject() {
     rect.setAttribute('fill', `hsl(${(i * 42) % 360} 70% 50%)`);
     svg.appendChild(rect);
 
-    // XP label at end of bar
+    // XP label at end of bar (shifted a little inward when zoomed)
     const xpLabel = document.createElementNS('http://www.w3.org/2000/svg','text');
     xpLabel.setAttribute('x', x + w + 8);
     xpLabel.setAttribute('y', y + barH/2 + 4);
     xpLabel.setAttribute('class', 'xp-value');
+    xpLabel.setAttribute('font-size', '11'); // slightly smaller to match zoom
     xpLabel.textContent = `${Math.round(d.xp/1000)}k`;
     svg.appendChild(xpLabel);
 
@@ -365,6 +371,7 @@ function drawXPByProject() {
     nameLabel.setAttribute('y', y + barH/2 + 4);
     nameLabel.setAttribute('text-anchor','end');
     nameLabel.setAttribute('class','project-label');
+    nameLabel.setAttribute('font-size','12'); // ensure label stays readable
     let disp = d.name;
     if(disp.length>30) disp = disp.slice(0,27)+'…';
     nameLabel.textContent = disp;

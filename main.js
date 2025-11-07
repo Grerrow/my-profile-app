@@ -1,46 +1,4 @@
-const proxyurl = 'https://my-profile-app-7zjs.onrender.com/proxy?url=';
-
-async function loginUser(event) {
-    event.preventDefault();
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value.trim();
-
-    const credentials = btoa(`${email}:${password}`);
-
-    try {
-        const response = await fetch(`${proxyurl}${encodeURIComponent('https://platform.zone01.gr/api/auth/signin')}`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Basic ${credentials}`,
-            },
-        });
-
-        const text = (await response.text()).trim();
-        console.log('🔐 Raw login response:', text);
-
-        if (response.ok && text && text.length > 20) {
-            // 🟢 FIX: Remove potential wrapping quotes from the token
-            const cleanToken = text.replace(/^"|"$/g, '');
-
-            // 🟢 FIX: Save cleaned token
-            localStorage.setItem('token', cleanToken);
-
-            console.log('✅ Stored clean token:', cleanToken);
-            alert('✅ Login successful!');
-            await initDashboard();
-            window.location.href = 'profile.html';
-        } else {
-            alert('❌ Login failed: ' + (text || response.statusText));
-        }
-    } catch (err) {
-        console.error('Login error:', err);
-        alert('Network or server error');
-    }
-}
-
-// attach listener here (loginUser is available)
-const form = document.getElementById("login-form");
-if (form) form.addEventListener("submit", loginUser);
+export const proxyurl = 'https://my-profile-app-7zjs.onrender.com/proxy?url=';
 
 ///jwt
 function decodeJWT(token) {
@@ -107,15 +65,13 @@ async function fetchUserData() {
 }
 
 
-async function fetchXpData(whereClause, storageKey) {
+async function fetchXpData(query, storageKey) {
     let token = localStorage.getItem('token');
-    if (!token) return;
-    // token = token.replace(/^"|"$/g, ''); // 🟢 FIX: clean token
-    if (!isTokenValid(token)) return;
+    if (!isTokenValid(token) || !token) return;
 
     const query = `
     query {
-        transaction(where: ${whereClause}, order_by: { createdAt: desc }) {
+        transaction(where: ${query}, order_by: { createdAt: desc }) {
             path
             amount
             createdAt
@@ -212,8 +168,7 @@ function calculateTotalXP() {
 
 async function auditRatio() {
     let token = localStorage.getItem('token');
-    if (!token) return;
-    if (!isTokenValid(token)) return;
+    if (!isTokenValid(token) || !token) return;
 
     const payload = decodeJWT(token);
     const userId = Number(payload.sub);
@@ -274,7 +229,7 @@ async function auditRatio() {
 
 
 
-async function initDashboard() {
+ export async function initDashboard() {
     await fetchUserData();
     await fetchUserProjectsXPData();
     await fetchUserCheckpointsXPData();

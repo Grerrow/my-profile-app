@@ -31,14 +31,12 @@ function isTokenValid(token) {
 let token = localStorage.getItem('token');
 if (!isTokenValid(token)) localStorage.removeItem('token');
 
-// ---------------------------
+// Basic User Information
 async function fetchUserData() {
     let token = localStorage.getItem('token');
     if (!token) return;
     if (!isTokenValid(token)) return;
-
-    const payload = decodeJWT(token);
-    const userId = Number(payload.sub);
+    const userId = Number(decodeJWT(token).sub);
 
     const query = `
     {
@@ -74,7 +72,7 @@ async function fetchUserData() {
     }
 }
 
-
+// XP Data Fetching
 async function fetchXpData(whereClause, storageKey) {
     let token = localStorage.getItem('token');
     if (!isTokenValid(token) || !token) return;
@@ -176,12 +174,12 @@ function calculateTotalXP() {
     return totals;
 }
 
+
+// Audit Ratio and Recent Audits
 async function auditRatio() {
     let token = localStorage.getItem('token');
     if (!isTokenValid(token) || !token) return;
-
-    const payload = decodeJWT(token);
-    const userId = Number(payload.sub);
+    const userId = Number(decodeJWT(token).sub);
 
     const query = `
       query {

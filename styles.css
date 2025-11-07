@@ -150,22 +150,59 @@ body.has-dashboard {
   font-weight: 700;
 }
 
-/* Dashboard Layout */
+/* Dashboard Layout: switch to 2-column layout for better stacking */
 .dashboard-app .dashboard {
   max-width: 1200px;
   margin: 20px auto;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 360px 1fr; /* profile left, stacked content right */
+  grid-auto-rows: auto;
   gap: 22px;
   padding: 0 20px 60px;
 }
 
+/* Middle container occupies the right column and stacks its children */
+.dashboard-app .dashboard .middle {
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* side-by-side */
+  gap: 22px;
+  align-items: start;
+}
+
+/* Ensure xp-project stays full width under both columns */
+.dashboard-app .xp-project {
+  grid-column: 1 / -1;
+}
+
+/* Slightly reduce card padding on right column so charts fit */
+.dashboard-app .middle .card {
+  padding: 14px;
+}
+
 /* Responsive Dashboard */
 @media (max-width: 1100px) {
-  .dashboard-app .dashboard { grid-template-columns: 1fr 1fr; }
+  .dashboard-app .dashboard {
+    grid-template-columns: 1fr 1fr;
+  }
+  .dashboard-app .dashboard .middle {
+    grid-column: 2;
+  }
 }
 @media (max-width: 720px) {
-  .dashboard-app .dashboard { grid-template-columns: 1fr; padding: 0 12px; }
+  .dashboard-app .dashboard {
+    grid-template-columns: 1fr;
+  }
+  .dashboard-app .dashboard .middle {
+    grid-column: 1;
+    order: 2;
+  }
+  .dashboard-app .info-section {
+    order: 1;
+  }
+  .dashboard-app .xp-project {
+    order: 3;
+  }
 }
 
 /* Cards */

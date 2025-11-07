@@ -6,7 +6,6 @@
   <link rel="stylesheet" href="styles.css" />
   <title>Profile Dashboard</title>
 </head>
-<!-- ADDED class to override global centering so dashboard fills the page -->
 <body class="has-dashboard">
   <div class="dashboard-app">
     <header class="header">
@@ -17,6 +16,7 @@
     </header>
 
     <main class="dashboard">
+      <!-- Left column: profile info -->
       <section class="card info-section" id="profile-card">
         <h2>Profile Info</h2>
         <div class="card-body">
@@ -32,23 +32,26 @@
         </div>
       </section>
 
-      <section class="card stats-section">
-        <h2>XP Composition</h2>
-        <div class="chart-wrapper">
-          <svg id="xp-donut" viewBox="0 0 300 300" width="300" height="300"></svg>
-          <div id="xp-legend" class="chart-legend"></div>
-        </div>
-      </section>
+      <!-- Right column: stack XP Composition + Audit Performance -->
+      <div class="middle">
+        <section class="card stats-section xp-composition">
+          <h2>XP Composition</h2>
+          <div class="chart-wrapper">
+            <svg id="xp-donut" viewBox="0 0 300 300" width="300" height="300"></svg>
+            <div id="xp-legend" class="chart-legend"></div>
+          </div>
+        </section>
 
-      <section class="card stats-section">
-        <h2>Audit Performance</h2>
-        <div class="chart-wrapper">
-          <svg id="audit-pie" viewBox="0 0 300 300" width="300" height="300"></svg>
-          <div id="audit-stats" class="audit-stats"></div>
-        </div>
-      </section>
+        <section class="card stats-section audit-performance">
+          <h2>Audit Performance</h2>
+          <div class="chart-wrapper">
+            <svg id="audit-pie" viewBox="0 0 300 300" width="300" height="300"></svg>
+            <div id="audit-stats" class="audit-stats"></div>
+          </div>
+        </section>
+      </div>
 
-     <!-- XP by Project: make it span the full grid and use internal scrolling -->
+     <!-- XP by Project: full-width row with internal scrolling -->
     <section class="card stats-section xp-project">
       <h2>XP by Project</h2>
       <div class="chart-scroll">

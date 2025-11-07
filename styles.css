@@ -20,6 +20,16 @@ body {
   margin: 0;
 }
 
+/* Allow pages that need full-width dashboard to disable the global centered body */
+body.has-dashboard {
+  /* override body centering for dashboard pages */
+  display: block;
+  align-items: initial;
+  justify-content: initial;
+  height: auto;
+  min-height: 100vh;
+}
+
 /* Login form container (global) */
 .login-form {
   background: white;
@@ -122,6 +132,13 @@ body {
   margin-top: 4px;
 }
 
+/* Make username at header larger */
+.dashboard-app .header-left #user-login {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
 /* Logout Button */
 .dashboard-app .logout-btn {
   background-color: #81c784;
@@ -145,7 +162,7 @@ body {
 
 /* Responsive Dashboard */
 @media (max-width: 1100px) {
-  .dashboard-app .dashboard { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-app .dashboard { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 720px) {
   .dashboard-app .dashboard { grid-template-columns: 1fr; padding: 0 12px; }
@@ -160,7 +177,7 @@ body {
   padding: 18px;
   border-radius: 12px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.6);
-  min-height: 220px;
+  min-height: 180px; /* reduced from 220 */
 }
 
 /* Section Headings */
@@ -180,13 +197,20 @@ body {
 /* Chart scroll/XP bar */
 .dashboard-app .chart-scroll {
   width: 100%;
-  height: auto;
-  max-height: 600px;
+  max-height: 360px;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: auto; /* allow vertical scroll when needed */
   padding: 12px 0;
   box-sizing: border-box;
   background: transparent;
+}
+
+/* Ensure the SVG inside can grow and not force the whole page to overflow */
+.dashboard-app .chart-scroll svg {
+  display: block;
+  /* allow svg width to exceed container and be scrolled horizontally */
+  max-width: none;
+  height: auto;
 }
 
 .dashboard-app #xp-bar {
@@ -282,7 +306,11 @@ body {
 
 /* Responsive adjustments for XP chart legend/labels */
 @media (max-width: 720px) {
-  .dashboard-app .chart-scroll { max-height: 400px; }
+  .dashboard-app .chart-scroll { max-height: 280px; }
   .dashboard-app #xp-bar .project-label, .dashboard-app #xp-bar .xp-value { font-size: 10px; }
   .dashboard-app .chart-scroll { height: 280px; }
 }
+
+/* optional: visible scrollbar styling (modern browsers) */
+.dashboard-app .chart-scroll::-webkit-scrollbar { height: 10px; width: 10px; }
+.dashboard-app .chart-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 8px; }

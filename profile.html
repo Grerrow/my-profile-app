@@ -6,18 +6,17 @@
   <link rel="stylesheet" href="styles.css" />
   <title>Profile Dashboard</title>
 </head>
-<body>
+<!-- ADDED class to override global centering so dashboard fills the page -->
+<body class="has-dashboard">
   <div class="dashboard-app">
-    <!-- CHANGED: user info moved to header -->
     <header class="header">
-      <div class="header-left user-info"> 
+      <div class="header-left user-info">
         <div id="user-login" class="muted">@user</div>
       </div>
       <button id="logout" class="logout-btn">Logout</button>
     </header>
 
     <main class="dashboard">
-      <!-- CHANGED: profile card now only contains profile info & latest audits container -->
       <section class="card info-section" id="profile-card">
         <h2>Profile Info</h2>
         <div class="card-body">
@@ -33,7 +32,6 @@
         </div>
       </section>
 
-      <!-- XP Composition -->
       <section class="card stats-section">
         <h2>XP Composition</h2>
         <div class="chart-wrapper">
@@ -42,7 +40,6 @@
         </div>
       </section>
 
-      <!-- Audit Performance -->
       <section class="card stats-section">
         <h2>Audit Performance</h2>
         <div class="chart-wrapper">
@@ -51,12 +48,10 @@
         </div>
       </section>
 
-     <!-- XP by Project -->
-    <section class="card stats-section">
+     <!-- XP by Project: make it span the full grid and use internal scrolling -->
+    <section class="card stats-section xp-project">
       <h2>XP by Project</h2>
-      <!-- Scroll wrapper for horizontal overflow -->
-      <div class="chart-scroll" style="width: 100%; overflow-x: auto;">
-        <!-- SVG width grows dynamically; height can be fixed -->
+      <div class="chart-scroll">
         <svg id="xp-bar" height="320"></svg>
       </div>
     </section>
@@ -64,7 +59,7 @@
     </main>
   </div>
 
-  <script src="main.js"></script>
+  <script type="module" src="main.js"></script>
   <script src="profile.js"></script>
 </body>
 </html>

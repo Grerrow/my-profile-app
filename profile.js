@@ -306,7 +306,13 @@ function drawXPByProject() {
   // compute bar height
   const barH = Math.max(minBarH, Math.min(maxBarH, Math.floor((400 - padding.t - padding.b - gap * (n-1)) / n)));
   const chartH = padding.t + padding.b + n * (barH + gap);
-  const chartW = 1000; // increase width for comfortable horizontal bars / scrolling
+
+  // compute chart width based on container and number of items so it doesn't explode
+  const container = svg.parentElement || document.body;
+  const containerWidth = Math.max(container.clientWidth || 800, 800);
+  const perItemWidth = 120; // space per project
+  const neededWidth = padding.l + padding.r + Math.max(containerWidth, projects.length * perItemWidth);
+  const chartW = Math.min(Math.max(neededWidth, 800), 2400); // cap to avoid extreme widths
 
   // set viewBox and explicit width so svg can be wider than container and scroll horizontally
   svg.setAttribute('viewBox', `0 0 ${chartW} ${chartH}`);
@@ -360,7 +366,7 @@ function drawXPByProject() {
     nameLabel.setAttribute('text-anchor','end');
     nameLabel.setAttribute('class','project-label');
     let disp = d.name;
-    if(disp.length>20) disp = disp.slice(0,17)+'…';
+    if(disp.length>30) disp = disp.slice(0,27)+'…';
     nameLabel.textContent = disp;
     svg.appendChild(nameLabel);
 

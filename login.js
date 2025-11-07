@@ -12,25 +12,25 @@ async function loginUser(event) {
             method: 'POST',
             headers: {
                 'Authorization': `Basic ${credentials}`,
+                'Content-Type': 'application/json',
+                'Accept': 'text/plain'
             },
+            // some auth endpoints expect an empty JSON body for POST — safe to send {}
+            body: JSON.stringify({})
         });
 
         const text = (await response.text()).trim();
-        console.log('🔐 Raw login response:', text);
+        console.log('🔐 Raw login response:', text, response.status);
 
         if (response.ok && text && text.length > 20) {
-            // 🟢 FIX: Remove potential wrapping quotes from the token
             const cleanToken = text.replace(/^"|"$/g, '');
-
-            // 🟢 FIX: Save cleaned token
             localStorage.setItem('token', cleanToken);
-
             console.log('✅ Stored clean token:', cleanToken);
             alert('✅ Login successful!');
             await initDashboard();
             window.location.href = 'profile.html';
         } else {
-            alert('❌ Login failed: ' + (text || response.statusText));
+            alert('❌ Login failed: ' + (text || response.statusText + ` (${response.status})`));
         }
     } catch (err) {
         console.error('Login error:', err);

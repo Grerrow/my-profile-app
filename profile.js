@@ -306,10 +306,14 @@ function drawXPByProject() {
   // compute bar height
   const barH = Math.max(minBarH, Math.min(maxBarH, Math.floor((400 - padding.t - padding.b - gap * (n-1)) / n)));
   const chartH = padding.t + padding.b + n * (barH + gap);
-  const chartW = 800; // fixed width for X-axis
+  const chartW = 1000; // increase width for comfortable horizontal bars / scrolling
 
+  // set viewBox and explicit width so svg can be wider than container and scroll horizontally
   svg.setAttribute('viewBox', `0 0 ${chartW} ${chartH}`);
-  svg.setAttribute('height', chartH);
+  svg.setAttribute('width', String(chartW));
+  svg.setAttribute('height', String(chartH));
+  svg.style.display = 'block';
+  svg.setAttribute('preserveAspectRatio', 'xMinYMin');
 
   if (projects.length === 0) {
     const t = document.createElementNS('http://www.w3.org/2000/svg','text');

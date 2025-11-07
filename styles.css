@@ -3,99 +3,105 @@
 
 /* Reset and basic layout */
 * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
+/* Global (login) body and login form */
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f4f6f8;
-    color: #333;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f4f6f8;
+  color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  margin: 0;
 }
 
-/* Login form container */
+/* Login form container (global) */
 .login-form {
-    background: white;
-    padding: 2.5rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    width: 100%;
-    max-width: 400px;
+  background: white;
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 400px;
 }
 
-/* Heading */
 .login-form h1 {
-    text-align: center;
-    margin-bottom: 1.5rem;
-    color: #2e7d32;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #2e7d32;
 }
 
-/* Label and input fields */
 .login-form label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 600;
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
 }
 
 .login-form input {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    margin-bottom: 1.5rem;
-    transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .login-form input:focus {
-    border-color: #2e7d32;
-    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.2);
-    outline: none;
+  border-color: #2e7d32;
+  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.2);
+  outline: none;
 }
 
-/* Submit button */
 .login-form button {
-    background: #2e7d32;
-    color: white;
-    border: none;
-    width: 100%;
-    padding: 0.75rem;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: bold;
-    transition: background 0.3s;
+  background: #2e7d32;
+  color: white;
+  border: none;
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: background 0.3s;
 }
 
 .login-form button:hover {
-    background: #388e3c;
+  background: #388e3c;
 }
 
-/* Responsive adjustments */
 @media (max-width: 480px) {
-    .login-form {
-        padding: 1.5rem;
-    }
+  .login-form {
+    padding: 1.5rem;
+  }
 }
-/* profile css */
-/* === Profile / Dashboard styles (REPLACE previous profile CSS) === */
 
-/* -----------------------------
-   Base Styles
------------------------------ */
-body {
+/* ================================
+   Dashboard / Profile (scoped)
+   Wrap profile pages with <div class="dashboard-app">...</div>
+   to apply these styles only on profile.html
+   ================================ */
+
+.dashboard-app {
   font-family: 'Inter', sans-serif;
-  margin: 0;
   background-color: #0f0f0f;
   color: #e6eef1;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding-top: 80px; /* space for fixed header */
 }
 
 /* Header */
-.header {
+.dashboard-app .header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -104,21 +110,21 @@ body {
   border-bottom: 1px solid rgba(255,255,255,0.03);
 }
 
-.header-left h1 {
+.dashboard-app .header-left h1 {
   font-size: 1.4rem;
   color: #81c784;
   margin: 0;
 }
 
-.header-left .muted {
+.dashboard-app .header-left .muted {
   font-size: 0.9rem;
   color: #9aa7ae;
   margin-top: 4px;
 }
 
 /* Logout Button */
-.logout-btn {
-  background-color: #d9534f;
+.dashboard-app .logout-btn {
+  background-color: #81c784;
   color: white;
   border: none;
   padding: 8px 14px;
@@ -128,7 +134,7 @@ body {
 }
 
 /* Dashboard Layout */
-.dashboard {
+.dashboard-app .dashboard {
   max-width: 1200px;
   margin: 20px auto;
   display: grid;
@@ -138,18 +144,18 @@ body {
 }
 
 /* Responsive Dashboard */
-@media (max-width: 1100px) { 
-  .dashboard { grid-template-columns: repeat(2, 1fr); } 
+@media (max-width: 1100px) {
+  .dashboard-app .dashboard { grid-template-columns: repeat(2, 1fr); }
 }
-@media (max-width: 720px) { 
-  .dashboard { grid-template-columns: 1fr; padding: 0 12px; } 
+@media (max-width: 720px) {
+  .dashboard-app .dashboard { grid-template-columns: 1fr; padding: 0 12px; }
 }
 
 /* Cards */
-.card { 
-  border-radius: 12px; 
+.dashboard-app .card {
+  border-radius: 12px;
 }
-.info-section, .stats-section, .card {
+.dashboard-app .info-section, .dashboard-app .stats-section, .dashboard-app .card {
   background: linear-gradient(180deg, #141414, #0f0f0f);
   padding: 18px;
   border-radius: 12px;
@@ -158,147 +164,125 @@ body {
 }
 
 /* Section Headings */
-.info-section h2, .stats-section h2 { 
-  color: #6cd3e2; 
-  margin: 0 0 12px 0; 
+.dashboard-app .info-section h2, .dashboard-app .stats-section h2 {
+  color: #6cd3e2;
+  margin: 0 0 12px 0;
 }
 
 /* Chart Wrapper */
-.chart-wrapper {
+.dashboard-app .chart-wrapper {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 18px;
 }
 
-/* -----------------------------
-   Horizontal XP Bar Chart
------------------------------ */
-/* -----------------------------
-   Horizontal XP Bar Chart
------------------------------ */
-
-/* Scroll wrapper for chart */
-.chart-scroll {
+/* Chart scroll/XP bar */
+.dashboard-app .chart-scroll {
   width: 100%;
-  height: auto;          /* allow height to grow if needed */
-  max-height: 600px;     /* prevent it from getting too tall */
-  overflow-x: auto;      /* horizontal scroll */
-  overflow-y: hidden;    /* no vertical scroll */
+  height: auto;
+  max-height: 600px;
+  overflow-x: auto;
+  overflow-y: hidden;
   padding: 12px 0;
   box-sizing: border-box;
   background: transparent;
 }
 
-/* SVG container */
-#xp-bar {
-  display: block;       /* block so width can grow dynamically */
+.dashboard-app #xp-bar {
+  display: block;
   height: 100%;
-  min-width: 800px;     /* ensures enough room for bars and XP labels */
+  min-width: 800px;
 }
 
-/* Bars */
-#xp-bar rect {
+.dashboard-app #xp-bar rect {
   transition: opacity 0.2s, transform 0.2s;
 }
 
-#xp-bar rect:hover {
+.dashboard-app #xp-bar rect:hover {
   opacity: 0.85;
   cursor: pointer;
   stroke: #fff;
   stroke-width: 1;
 }
 
-/* Project labels (Y-axis) */
-#xp-bar .project-label {
+.dashboard-app #xp-bar .project-label {
   font-family: 'Inter', sans-serif;
   font-weight: 600;
   font-size: 12px;
   fill: #ddd;
-  text-anchor: end;     /* aligns text to the left of bars */
+  text-anchor: end;
 }
 
-/* XP value labels at end of bars */
-#xp-bar .xp-value {
+.dashboard-app #xp-bar .xp-value {
   font-family: 'Inter', sans-serif;
   font-weight: 600;
   font-size: 12px;
   fill: #fff;
-  text-anchor: start;   /* aligns text at the end of bar */
+  text-anchor: start;
 }
 
-/* Responsive adjustments */
+/* Legend & Audit Styles */
+.dashboard-app .chart-legend {
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  color:#cbd6db;
+}
+
+.dashboard-app .audit-stats {
+  color: #bcd;
+  margin-left: 12px;
+}
+
+.dashboard-app #audit-stats p {
+  margin: 6px 0;
+}
+
+.dashboard-app .audits-list {
+  margin-top: 8px;
+  color: #c8d2d6;
+  font-size: 14px;
+}
+
+.dashboard-app .audit {
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.02);
+}
+
+.dashboard-app .audit-card {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+
+.dashboard-app .audit-title {
+  font-weight:700;
+  color:#fff;
+}
+
+.dashboard-app .audit-meta {
+  color:#9aa7ae;
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.dashboard-app .audit-grade.passed {
+  color:#4CAF50;
+  font-weight:700;
+}
+
+/* Misc */
+.dashboard-app .muted {
+  color: #98a4a8;
+  font-size: 0.9rem;
+}
+
+/* Responsive adjustments for XP chart legend/labels */
 @media (max-width: 720px) {
-  .chart-scroll { max-height: 400px; }
-  #xp-bar .project-label, #xp-bar .xp-value { font-size: 10px; }
-}
-
-
-/* -----------------------------
-   Legend & Audit Styles
------------------------------ */
-.chart-legend { 
-  display:flex; 
-  flex-direction:column; 
-  gap:8px; 
-  color:#cbd6db; 
-}
-
-.audit-stats { 
-  color: #bcd; 
-  margin-left: 12px; 
-}
-
-#audit-stats p { 
-  margin: 6px 0; 
-}
-
-/* Audits List */
-.audits-list { 
-  margin-top: 8px; 
-  color: #c8d2d6; 
-  font-size: 14px; 
-}
-
-.audit { 
-  padding: 6px 0; 
-  border-bottom: 1px solid rgba(255,255,255,0.02); 
-}
-
-.audit-card { 
-  display:flex; 
-  justify-content:space-between; 
-  align-items:center; 
-  gap:10px; 
-}
-
-.audit-title { 
-  font-weight:700; 
-  color:#fff; 
-}
-
-.audit-meta { 
-  color:#9aa7ae; 
-  display:flex; 
-  gap:10px; 
-  align-items:center; 
-}
-
-.audit-grade.passed { 
-  color:#4CAF50; 
-  font-weight:700; 
-}
-
-/* -----------------------------
-   Misc
------------------------------ */
-.muted { 
-  color: #98a4a8; 
-  font-size: 0.9rem; 
-}
-
-/* Responsive adjustments */
-@media (max-width: 720px) {
-  .chart-scroll { height: 280px; }
-  #xp-bar .project-label, #xp-bar .xp-value { font-size: 10px; }
+  .dashboard-app .chart-scroll { max-height: 400px; }
+  .dashboard-app #xp-bar .project-label, .dashboard-app #xp-bar .xp-value { font-size: 10px; }
+  .dashboard-app .chart-scroll { height: 280px; }
 }
